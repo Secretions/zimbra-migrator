@@ -238,9 +238,9 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--list', default='list.txt', help='Account list')
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode (SOAP Trace)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
-    parser.add_argument('-i', '--imapsync', action='store_true', help='Perform imapsyncs')
+    parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
     parser.add_argument('--signatures', action='store_true', help='Signatures')
-    parser.add_argument('-s', '--sharing', action='store_true', help='Sharing (should be the last thing)')
+    parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
 
     config.read(args.config)
