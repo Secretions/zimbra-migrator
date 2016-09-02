@@ -68,6 +68,8 @@ def main(accounts):
             print('\tSetting up shares...')
             sharing(account)
 
+### imapsync section
+
 def imapsync(account):
     print("Beginning Mail Migration, getting mail-only folder list...")
     # Get admin login from source server, and do delegate auth
@@ -98,6 +100,41 @@ def imapsync(account):
     print("Runnig imapsync command: {0}".format(imapsync))
     call(imapsync)
 
+# imapsync helper function
+def _gen_imapsync_command(account, folders):
+    # Base imapsync command
+    # 0 = imapsync full path
+    # 1 = global imapsync options
+    cmd = []
+    cmd.append(config.get('Global', 'imapsync'))
+    cmd = cmd + ast.literal_eval(config.get('Global', 'imapsync_opts'))
+
+    # Source options
+    cmd.append('--host1'); cmd.append(config.get('Source', 'mail_server'))
+    cmd.append('--user1'); cmd.append(account)
+    cmd.append('--authuser1'); cmd.append(config.get('Source', 'admin_user'))
+    cmd.append('--password1'); cmd.append(config.get('Source', 'admin_pass'))
+    cmd = cmd + ast.literal_eval(config.get('Source', 'imapsync_opts'))
+
+    dest_account = _get_dest_address(account)
+
+    # Dest options
+    cmd.append('--host2'); cmd.append(config.get('Dest', 'mail_server'))
+    cmd.append('--user2'); cmd.append(dest_account)
+    cmd.append('--authuser2'); cmd.append(config.get('Dest', 'admin_user'))
+    cmd.append('--password2'); cmd.append(config.get('Dest', 'admin_pass'))
+    cmd = cmd + ast.literal_eval(config.get('Dest', 'imapsync_opts'))
+
+    # Specify folders
+    for folder in folders:
+        cmd.append('--folder'); cmd.append(folder)
+
+    cmd.append("2>&1")
+    return cmd
+
+
+### sharing section
+
 def sharing(account):
     print("Beginning Mail Migration, getting mail-only folder list...")
     # Get admin login from source server, and do delegate auth
@@ -108,12 +145,7 @@ def sharing(account):
                       password = config.get('Source', 'admin_pass'))
     source_mail = _get_mail_session(source_admin, account, config.get('Source', 'mail_server'))
 
-    # Check if we're migrating to a different domain
-    if config.has_option('Dest', 'domain'):
-        local_part = re.match('(.*)@.*', account)
-        dest_account = "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
-    else:
-        dest_account = account
+    dest_account = _get_dest_address(account)
 
     # Get admin login from dest server, and do delegate auth
     dest_admin = zimbrasoap.admin(server = config.get('Dest', 'admin_server'),
@@ -158,6 +190,7 @@ def sharing(account):
                         exit(0)
         #if 'acl' in folder and 'grant' in folder.acl:
 
+# sharing helper function
 def _add_share(mail, folder_id, target_type, target_name, perm):
     try:
         result = mail.FolderAction(action = {'op':'grant', 'id':folder_id, 'value':{'grant':{'value':'', 'perm':perm, 'd':target_name, 'gt':target_type} }})
@@ -188,42 +221,6 @@ def _get_mail_session(admin, account, server):
                            authTokenLifetime = response.lifetime,
                            zimbraId = zimbraId, debug = args.debug, verbose = args.verbose)
     return mail
-
-def _gen_imapsync_command(account, folders):
-    # Base imapsync command
-    # 0 = imapsync full path
-    # 1 = global imapsync options
-    cmd = []
-    cmd.append(config.get('Global', 'imapsync'))
-    cmd = cmd + ast.literal_eval(config.get('Global', 'imapsync_opts'))
-
-    # Source options
-    cmd.append('--host1'); cmd.append(config.get('Source', 'mail_server'))
-    cmd.append('--user1'); cmd.append(account)
-    cmd.append('--authuser1'); cmd.append(config.get('Source', 'admin_user'))
-    cmd.append('--password1'); cmd.append(config.get('Source', 'admin_pass'))
-    cmd = cmd + ast.literal_eval(config.get('Source', 'imapsync_opts'))
-
-    # Check if we're migrating to a different domain
-    if config.has_option('Dest', 'domain'):
-        local_part = re.match('(.*)@.*', account)
-        dest_account = "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
-    else:
-        dest_account = account
-
-    # Dest options
-    cmd.append('--host2'); cmd.append(config.get('Dest', 'mail_server'))
-    cmd.append('--user2'); cmd.append(dest_account)
-    cmd.append('--authuser2'); cmd.append(config.get('Dest', 'admin_user'))
-    cmd.append('--password2'); cmd.append(config.get('Dest', 'admin_pass'))
-    cmd = cmd + ast.literal_eval(config.get('Dest', 'imapsync_opts'))
-
-    # Specify folders
-    for folder in folders:
-        cmd.append('--folder'); cmd.append(folder)
-
-    cmd.append("2>&1")
-    return cmd
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Zimbra to Zimbra Migration Helper')
