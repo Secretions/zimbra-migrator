@@ -109,7 +109,7 @@ def _gen_imapsync_command(account, folders):
     cmd = cmd + ast.literal_eval(config.get('Global', 'imapsync_opts'))
 
     # Source options
-    cmd.append('--host1'); cmd.append(config.get('Source', 'mail_server'))
+    cmd.append('--host1'); cmd.append(config.get('Source', 'zimbra_server'))
     cmd.append('--user1'); cmd.append(account)
     cmd.append('--authuser1'); cmd.append(config.get('Source', 'admin_user'))
     cmd.append('--password1'); cmd.append(config.get('Source', 'admin_pass'))
@@ -118,7 +118,7 @@ def _gen_imapsync_command(account, folders):
     dest_account = _get_dest_address(account)
 
     # Dest options
-    cmd.append('--host2'); cmd.append(config.get('Dest', 'mail_server'))
+    cmd.append('--host2'); cmd.append(config.get('Dest', 'zimbra_server'))
     cmd.append('--user2'); cmd.append(dest_account)
     cmd.append('--authuser2'); cmd.append(config.get('Dest', 'admin_user'))
     cmd.append('--password2'); cmd.append(config.get('Dest', 'admin_pass'))
@@ -226,7 +226,7 @@ def _get_mail_session(admin, account, section):
     response = admin.GetAccountInfo(account = {'by':'name', 'value':account})
     zimbraId = admin.ParseAttributes(response.a)['zimbraId'][0]
     response = admin.DelegateAuth(attributes = { 'duration':'86400' }, account = {'by':'id', 'value':zimbraId})
-    mail = zimbrasoap.mail(server = config.get(section, 'mail_server'),
+    mail = zimbrasoap.mail(server = config.get(section, 'zimbra_server'),
                            authToken = response.authToken,
                            authTokenLifetime = response.lifetime,
                            zimbraId = zimbraId, debug = args.debug, verbose = args.verbose)
@@ -250,11 +250,11 @@ if __name__ == '__main__':
     if not config.has_option('Global', 'imapsync_opts'):
         config.set('Global', 'imapsync_opts', '')
     if not config.has_option('Source', 'admin_server'):
-        config.set('Source', 'admin_server', config.get('Source', 'mail_server'))
+        config.set('Source', 'admin_server', config.get('Source', 'zimbra_server'))
     if not config.has_option('Source', 'imapsync_opts'):
         config.set('Source', 'imapsync_opts', '')
     if not config.has_option('Dest', 'admin_server'):
-        config.set('Dest', 'admin_server', config.get('Dest', 'mail_server'))
+        config.set('Dest', 'admin_server', config.get('Dest', 'zimbra_server'))
     if not config.has_option('Dest', 'imapsync_opts'):
         config.set('Dest', 'imapsync_opts', '[]')
 
