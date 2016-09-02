@@ -1,0 +1,256 @@
+#!/usr/bin/python
+import re
+import ast
+import argparse
+import ConfigParser
+import httplib2
+from subprocess import call
+
+import pysimplesoap
+import zimbrasoap
+
+config = ConfigParser.RawConfigParser()
+args = ''
+
+### Ripped from stackoverflow
+### Current host I'm working with borks on tls negotiations supporting 1.2
+# Start of the workaround for SSL3
+# This is a monkey patch / module function overriding
+# to allow pages that only work with SSL3
+
+# Build the appropriate socket wrapper for ssl
+try:
+    import ssl # python 2.6
+    httplib2.ssl_SSLError = ssl.SSLError
+    def _ssl_wrap_socket(sock, key_file, cert_file,
+                         disable_validation, ca_certs):
+        if disable_validation:
+            cert_reqs = ssl.CERT_NONE
+        else:
+            cert_reqs = ssl.CERT_REQUIRED
+        # Our fix for sites the only accepts SSL3
+        try:
+            # Trying SSLv3 first
+            tempsock = ssl.wrap_socket(sock, keyfile=key_file, certfile=cert_file,
+                                       cert_reqs=cert_reqs, ca_certs=ca_certs,
+                                       ssl_version=ssl.PROTOCOL_TLSv1)
+        except ssl.SSLError, e:
+            tempsock = ssl.wrap_socket(sock, keyfile=key_file, certfile=cert_file,
+                                       cert_reqs=cert_reqs, ca_certs=ca_certs,
+                                       ssl_version=ssl.PROTOCOL_TLSv1)
+        return tempsock
+    httplib2._ssl_wrap_socket = _ssl_wrap_socket
+except (AttributeError, ImportError):
+    httplib2.ssl_SSLError = None
+    def _ssl_wrap_socket(sock, key_file, cert_file,
+                         disable_validation, ca_certs):
+        if not disable_validation:
+            raise httplib2.CertificateValidationUnsupported(
+                    "SSL certificate validation is not supported without "
+                    "the ssl module installed. To avoid this error, install "
+                    "the ssl module, or explicity disable validation.")
+        ssl_sock = socket.ssl(sock, key_file, cert_file)
+        return httplib.FakeSocket(sock, ssl_sock)
+    httplib2._ssl_wrap_socket = _ssl_wrap_socket
+
+# End of the workaround for SSL3
+
+def main(accounts):
+    print("Migrating {0} accounts...".format(len(accounts)))
+    for account in accounts:
+        print("Migrating {0}...".format(account))
+        # imapsync
+        if args.imapsync:
+            print("\tPerforming imapsync...")
+            imapsync(account)
+        # sharing (should go after calendars/contacts/briefacse)
+        if args.sharing:
+            print('\tSetting up shares...')
+            sharing(account)
+
+def imapsync(account):
+    print("Beginning Mail Migration, getting mail-only folder list...")
+    # Get admin login from source server, and do delegate auth
+    source_admin = zimbrasoap.admin(server = config.get('Source', 'admin_server'),
+                                    debug  = args.debug,
+                                   verbose = args.verbose)
+    source_admin.Auth(name     = config.get('Source', 'admin_user'),
+                      password = config.get('Source', 'admin_pass'))
+    source_mail = _get_mail_session(source_admin, account, config.get('Source', 'mail_server'))
+    response = source_mail.GetFolder(attributes = { 'visible':1, 'view':'message', 'needGranteeName':'1' },
+                                     folder     = {'value':'blah'})
+    folders = []
+    # go through every folder tag, we don't care the order/nesting
+    for folder in response.folder:
+        # External folder
+        if f in folder and re.search(folder['f'], 'y'):
+            continue
+        if folder['absFolderPath'] is None:
+            continue
+        folder_name = re.sub(r'^/Inbox', '/INBOX', folder['absFolderPath'])
+        folder_name = re.sub(r'^/', '', folder_name)
+        folder_name = re.sub(r'&', '&-', folder_name)
+        folders.append(folder_name)
+
+    if args.verbose: print("Migrating folders: {0}".format(folders))
+
+    imapsync = _gen_imapsync_command(account, folders)
+    print("Runnig imapsync command: {0}".format(imapsync))
+    call(imapsync)
+
+def sharing(account):
+    print("Beginning Mail Migration, getting mail-only folder list...")
+    # Get admin login from source server, and do delegate auth
+    source_admin = zimbrasoap.admin(server = config.get('Source', 'admin_server'),
+                                    debug  = args.debug,
+                                   verbose = args.verbose)
+    source_admin.Auth(name     = config.get('Source', 'admin_user'),
+                      password = config.get('Source', 'admin_pass'))
+    source_mail = _get_mail_session(source_admin, account, config.get('Source', 'mail_server'))
+
+    # Check if we're migrating to a different domain
+    if config.has_option('Dest', 'domain'):
+        local_part = re.match('(.*)@.*', account)
+        dest_account = "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
+    else:
+        dest_account = account
+
+    # Get admin login from dest server, and do delegate auth
+    dest_admin = zimbrasoap.admin(server = config.get('Dest', 'admin_server'),
+                                  debug  = args.debug,
+                                 verbose = args.verbose)
+    dest_admin.Auth(name     = config.get('Dest', 'admin_user'),
+                    password = config.get('Dest', 'admin_pass'))
+    dest_mail = _get_mail_session(dest_admin, dest_account, config.get('Dest', 'mail_server'))
+
+
+    folders = source_mail.GetFolder(attributes = { 'visible':1, 'needGranteeName':'1' },
+                                     folder     = {'value':'blah'})
+
+    for folder in folders.folder:
+        children = folder.children()
+        for child in (children or []):
+            if child.get_name() == 'acl' and 'grant' in folder.acl:
+                for grant in folder.acl.grant:
+                    # Get dest folder ida
+                    try:
+                        dest_folder = dest_mail.GetFolder(folder = {'depth':'0', 'value':'', 'path':folder['absFolderPath']}).folder
+                    except pysimplesoap.client.SoapFault, e:
+                        # If original folder was empty, it may not have been migrated
+                        if re.search('no such folder path', str(e)) and folder['n'] == '0':
+                            print('{0}:'.format(folder['absFolderPath']))
+                            print("\tDestination folder DOES NOT EXIST, but source is empty! Skipping...")
+                            continue
+                    if grant['gt'] == 'usr' or grant['gt'] == 'dom':
+                        # Check if we're migrating to a different domain
+                        if config.has_option('Dest', 'domain'):
+                            domain = re.match('.*@(.*)', account)
+                            target_name = re.sub(domain.group(1), config.get('Dest', 'domain'), grant['d'])
+                        else:
+                            target_name = grant['d']
+                        print("{0} [{4} > {5}] -- grantor: {1} -- grantee: {2} [{3}]".format(folder['absFolderPath'], dest_account, target_name, grant['perm'], folder['id'], dest_folder['id']))
+                        _add_share(dest_mail, dest_folder['id'], grant['gt'], target_name, grant['perm'])
+                    elif grant['gt'] == 'guest':
+                        print("{0} [{4} > {5}] -- grantor: {1} -- grantee: {2} [{3}]".format(folder['absFolderPath'], dest_account, grant['zid'], grant['perm'], folder['id'], dest_folder['id']))
+                        _add_share(dest_mail, dest_folder['id'], grant['gt'], grant['zid'], grant['perm'])
+                    else:
+                        print("Unknown grant type!!!")
+                        exit(0)
+        #if 'acl' in folder and 'grant' in folder.acl:
+
+def _add_share(mail, folder_id, target_type, target_name, perm):
+    try:
+        result = mail.FolderAction(action = {'op':'grant', 'id':folder_id, 'value':{'grant':{'value':'', 'perm':perm, 'd':target_name, 'gt':target_type} }})
+    except pysimplesoap.client.SoapFault, e:
+        # We're good!
+        if re.search('grantee already exists', str(e)):
+            print("\tGrant already exists. Continuing...")
+            return 1
+        else:
+            raise
+    return result
+
+### global helper functions
+def _get_dest_address(account):
+    # Check if we're migrating to a different domain
+    if config.has_option('Dest', 'domain'):
+        local_part = re.match('(.*)@.*', account)
+        return "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
+    else:
+        return account
+
+def _get_mail_session(admin, account, server):
+    response = admin.GetAccountInfo(account = {'by':'name', 'value':account})
+    zimbraId = admin.ParseAttributes(response.a)['zimbraId'][0]
+    response = admin.DelegateAuth(attributes = { 'duration':'86400' }, account = {'by':'id', 'value':zimbraId})
+    mail = zimbrasoap.mail(server = server,
+                           authToken = response.authToken,
+                           authTokenLifetime = response.lifetime,
+                           zimbraId = zimbraId, debug = args.debug, verbose = args.verbose)
+    return mail
+
+def _gen_imapsync_command(account, folders):
+    # Base imapsync command
+    # 0 = imapsync full path
+    # 1 = global imapsync options
+    cmd = []
+    cmd.append(config.get('Global', 'imapsync'))
+    cmd = cmd + ast.literal_eval(config.get('Global', 'imapsync_opts'))
+
+    # Source options
+    cmd.append('--host1'); cmd.append(config.get('Source', 'mail_server'))
+    cmd.append('--user1'); cmd.append(account)
+    cmd.append('--authuser1'); cmd.append(config.get('Source', 'admin_user'))
+    cmd.append('--password1'); cmd.append(config.get('Source', 'admin_pass'))
+    cmd = cmd + ast.literal_eval(config.get('Source', 'imapsync_opts'))
+
+    # Check if we're migrating to a different domain
+    if config.has_option('Dest', 'domain'):
+        local_part = re.match('(.*)@.*', account)
+        dest_account = "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
+    else:
+        dest_account = account
+
+    # Dest options
+    cmd.append('--host2'); cmd.append(config.get('Dest', 'mail_server'))
+    cmd.append('--user2'); cmd.append(dest_account)
+    cmd.append('--authuser2'); cmd.append(config.get('Dest', 'admin_user'))
+    cmd.append('--password2'); cmd.append(config.get('Dest', 'admin_pass'))
+    cmd = cmd + ast.literal_eval(config.get('Dest', 'imapsync_opts'))
+
+    # Specify folders
+    for folder in folders:
+        cmd.append('--folder'); cmd.append(folder)
+
+    cmd.append("2>&1")
+    return cmd
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Zimbra to Zimbra Migration Helper')
+    parser.add_argument('-c', '--config', default='zmigrator.cfg', help='Config file (default: zmigrator.cfg)')
+    parser.add_argument('-l', '--list', default='list.txt', help='Account list')
+    parser.add_argument('-d', '--debug', action='store_true', help='Debug mode (SOAP Trace)')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
+    parser.add_argument('-i', '--imapsync', action='store_true', help='Perform imapsyncs')
+    parser.add_argument('-s', '--sharing', action='store_true', help='Sharing (should be the last thing)')
+    args = parser.parse_args()
+
+    config.read(args.config)
+
+    if not config.has_option('Global', 'imapsync'):
+        config.set('Global', 'imapsync', 'imapsync')
+    if not config.has_option('Global', 'imapsync_opts'):
+        config.set('Global', 'imapsync_opts', '')
+    if not config.has_option('Source', 'admin_server'):
+        config.set('Source', 'admin_server', config.get('Source', 'mail_server'))
+    if not config.has_option('Source', 'imapsync_opts'):
+        config.set('Source', 'imapsync_opts', '')
+    if not config.has_option('Dest', 'admin_server'):
+        config.set('Dest', 'admin_server', config.get('Dest', 'mail_server'))
+    if not config.has_option('Dest', 'imapsync_opts'):
+        config.set('Dest', 'imapsync_opts', '[]')
+
+    with open(args.list) as f:
+        accounts = f.read().splitlines()
+
+    main(accounts)
