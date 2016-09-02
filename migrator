@@ -63,6 +63,10 @@ def main(accounts):
         if args.imapsync:
             print("\tPerforming imapsync...")
             imapsync(account)
+        # signatures
+        if args.signatures:
+            print("\tSyncing signatures...")
+            signatures(account)
         # sharing (should go after calendars/contacts/briefacse)
         if args.sharing:
             print('\tSetting up shares...')
@@ -72,13 +76,8 @@ def main(accounts):
 
 def imapsync(account):
     print("Beginning Mail Migration, getting mail-only folder list...")
-    # Get admin login from source server, and do delegate auth
-    source_admin = zimbrasoap.admin(server = config.get('Source', 'admin_server'),
-                                    debug  = args.debug,
-                                   verbose = args.verbose)
-    source_admin.Auth(name     = config.get('Source', 'admin_user'),
-                      password = config.get('Source', 'admin_pass'))
-    source_mail = _get_mail_session(source_admin, account, config.get('Source', 'mail_server'))
+    source_admin = _get_admin_session('Source')
+    source_mail = _get_mail_session(source_admin, account, 'Source')
     response = source_mail.GetFolder(attributes = { 'visible':1, 'view':'message', 'needGranteeName':'1' },
                                      folder     = {'value':'blah'})
     folders = []
@@ -133,27 +132,30 @@ def _gen_imapsync_command(account, folders):
     return cmd
 
 
+### sigantures section
+def signatures(account):
+    print("Syncing signatures, I say!")
+    source_admin = _get_admin_session('Source')
+    source_mail  = _get_mail_session(source_admin, account, 'Source')
+   
+    source_mail.namespace = 'urn:zimbraAccount'
+    response = source_mail.GetSignatures()
+    print response.as_xml(pretty=True)
+
+
 ### sharing section
 
 def sharing(account):
     print("Beginning Mail Migration, getting mail-only folder list...")
     # Get admin login from source server, and do delegate auth
-    source_admin = zimbrasoap.admin(server = config.get('Source', 'admin_server'),
-                                    debug  = args.debug,
-                                   verbose = args.verbose)
-    source_admin.Auth(name     = config.get('Source', 'admin_user'),
-                      password = config.get('Source', 'admin_pass'))
-    source_mail = _get_mail_session(source_admin, account, config.get('Source', 'mail_server'))
+    source_admin = _get_admin_session('Source')
+    source_mail = _get_mail_session(source_admin, account, 'Source')
 
     dest_account = _get_dest_address(account)
 
     # Get admin login from dest server, and do delegate auth
-    dest_admin = zimbrasoap.admin(server = config.get('Dest', 'admin_server'),
-                                  debug  = args.debug,
-                                 verbose = args.verbose)
-    dest_admin.Auth(name     = config.get('Dest', 'admin_user'),
-                    password = config.get('Dest', 'admin_pass'))
-    dest_mail = _get_mail_session(dest_admin, dest_account, config.get('Dest', 'mail_server'))
+    dest_admin = _get_admin_session('Dest')
+    dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
 
 
     folders = source_mail.GetFolder(attributes = { 'visible':1, 'needGranteeName':'1' },
@@ -212,11 +214,19 @@ def _get_dest_address(account):
     else:
         return account
 
-def _get_mail_session(admin, account, server):
+def _get_admin_session(section):
+    source_admin = zimbrasoap.admin(server  = config.get(section, 'admin_server'),
+                                    debug   = args.debug,
+                                    verbose = args.verbose)
+    source_admin.Auth(name     = config.get(section, 'admin_user'),
+                      password = config.get(section, 'admin_pass'))
+    return source_admin
+
+def _get_mail_session(admin, account, section):
     response = admin.GetAccountInfo(account = {'by':'name', 'value':account})
     zimbraId = admin.ParseAttributes(response.a)['zimbraId'][0]
     response = admin.DelegateAuth(attributes = { 'duration':'86400' }, account = {'by':'id', 'value':zimbraId})
-    mail = zimbrasoap.mail(server = server,
+    mail = zimbrasoap.mail(server = config.get(section, 'mail_server'),
                            authToken = response.authToken,
                            authTokenLifetime = response.lifetime,
                            zimbraId = zimbraId, debug = args.debug, verbose = args.verbose)
@@ -229,6 +239,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode (SOAP Trace)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
     parser.add_argument('-i', '--imapsync', action='store_true', help='Perform imapsyncs')
+    parser.add_argument('--signatures', action='store_true', help='Signatures')
     parser.add_argument('-s', '--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
 
