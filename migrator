@@ -58,6 +58,7 @@ except (AttributeError, ImportError):
 def main(accounts):
     print("Migrating {0} accounts...".format(len(accounts)))
     for account in accounts:
+        if re.match('^\s*#', account): continue
         print("Migrating {0}...".format(account))
         # imapsync
         if args.imapsync:
@@ -96,8 +97,11 @@ def imapsync(account):
     if args.verbose: print("Migrating folders: {0}".format(folders))
 
     imapsync = _gen_imapsync_command(account, folders)
-    print("Runnig imapsync command: {0}".format(imapsync))
-    call(imapsync)
+    if args.no_changes:
+        print("NO CHANGES: Not running imapsync, command would be:\n\t{0}".format(imapsync))
+    else:
+        print("Runnig imapsync command: {0}".format(imapsync))
+        call(imapsync)
 
 # imapsync helper function
 def _gen_imapsync_command(account, folders):
@@ -134,13 +138,71 @@ def _gen_imapsync_command(account, folders):
 
 ### sigantures section
 def signatures(account):
-    print("Syncing signatures, I say!")
     source_admin = _get_admin_session('Source')
     source_mail  = _get_mail_session(source_admin, account, 'Source')
+
+    dest_account = _get_dest_address(account)
+
+    # Get admin login from dest server, and do delegate auth
+    dest_admin = _get_admin_session('Dest')
+    dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
    
     source_mail.namespace = 'urn:zimbraAccount'
-    response = source_mail.GetSignatures()
-    print response.as_xml(pretty=True)
+    sig_response = source_mail.GetSignatures()
+    source_mail.namespace = 'urn:zimbraMail'
+
+    #print sig_response.as_xml(pretty=True)
+    if 'signature' not in sig_response:
+        print("\tNo signatures to sync")
+        return 1
+    for sig in sig_response.signature:
+        print("Syncing signature: {0}".format(sig['name']))
+        source_cid = None
+        dest_cid = None
+        children = sig.children()
+        for child in (children or []):
+            # Find if contact has cid tag
+            if child.get_name() == 'cid':
+                source_cid = str(child)
+
+        # If we have a cid tag, we need to determine which contact it
+        # is so we can find the corresponding contact on the dest server
+        if source_cid:
+            source_contact = source_mail.GetContacts(cn = {'id':source_cid, 'value':''}).cn
+            source_contact_folderid = source_contact['l']
+            source_contact_folder = source_mail.GetFolder(attributes = {'depth':'0'},
+                                                              folder = {'l':source_contact_folderid, 'value':''}).folder
+            dest_mail.namespace = 'urn:zimbraMail'
+            dest_contacts = dest_mail.Search(attributes = {'types':'contact'},
+                                                  query = {'value':'in:"{0}" contact:"{1}"'.format(source_contact_folder['absFolderPath'], source_contact['fileAsStr'])})
+
+            # if we've found our contact, set dest_cid to that
+            # TODO: Deep check of contact match in case of multiple contacts with same name
+            if 'cn' in dest_contacts:
+                for cn in dest_contacts.cn:
+                    if cn['fileAsStr'] == source_contact['fileAsStr']:
+                        dest_cid = cn['id']
+
+        # del sig.cid doesn't do what you'd expect (removes all children)
+        # don't know of any intended way to do this, so digging into internals...
+        if source_cid:
+            sig._element.removeChild(sig.cid._element)
+        if dest_cid:
+            sig.cid = dest_cid
+        
+        if args.no_changes:
+            print("NO CHANGES: Not syncing sig, SOAP command would be:\n\t<CreateSignatureRequest>{0}</CreateSignatureRequest>".format(sig.__repr__()))
+            continue
+
+        try:
+            dest_mail.namespace = 'urn:zimbraAccount'
+            dest_mail.CreateSignature(sig)
+        except pysimplesoap.client.SoapFault, e:
+            # If signature already exists, sweet!
+            if re.search('signature already exists', str(e)):
+                continue
+            else:
+                raise
 
 
 ### sharing section
@@ -194,6 +256,9 @@ def sharing(account):
 
 # sharing helper function
 def _add_share(mail, folder_id, target_type, target_name, perm):
+    if args.no_changes:
+        print("NO CHANGES: Not adding share...\n")
+        return 1
     try:
         result = mail.FolderAction(action = {'op':'grant', 'id':folder_id, 'value':{'grant':{'value':'', 'perm':perm, 'd':target_name, 'gt':target_type} }})
     except pysimplesoap.client.SoapFault, e:
@@ -238,6 +303,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--list', default='list.txt', help='Account list')
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode (SOAP Trace)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
+    parser.add_argument('-n', '--no_changes', action='store_true', help='No changes (dry run)')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
     parser.add_argument('--signatures', action='store_true', help='Signatures')
     parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
