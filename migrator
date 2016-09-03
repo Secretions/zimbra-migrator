@@ -12,6 +12,80 @@ import zimbrasoap
 config = ConfigParser.RawConfigParser()
 args = ''
 
+##### Account Attribute notes
+
+### Seem to be unused for technical reasons
+### (if this list is ever used to migrate from non-zimbra directories, these
+###  may be come relevant)
+#
+# c - unused (co is used)
+# gn - alias of givenName, never shows up on its own
+# o - never see this on an account in zimbra (used on domains, but automatic)
+# streetAddress - alias of street
+
+### Just never used
+# destinationIndicator
+# internationalISDNNumber - if you have one one of these, I'll take you to dinner
+# postOfficeBox 
+# postalAddress
+# preferredDeliveryMethod
+# registeredAddress
+# teletexTerminalIdentifier - rfc4519's description of this even says it's bunk
+# telexNumber - I preferred terminate over telix and telemate
+# userCertificate - I don't believe this is used
+# userPassword - Not available via SOAP
+# userSMIMECertificate - Ditto to userCertificate (S/MIME zimlet does something else)
+# x121Address
+
+### Admin stuff
+# zimbraACE - Zimbra ACLs, not settings
+# zimbraAdminAuthTokenLifetime - More a system-level decision
+# zimbraAdminConsoleUIComponents
+# zimbraAdminSavedSearches
+
+### Archiving stuff
+# zimbraArchiveAccount
+# zimbraArchiveAccountDateTemplate
+# zimbraArchiveAccountNameTemplate
+# zimbraArchiveEnabled
+
+### For resources
+# zimbraAccountCalendarUserType
+
+### Just shouldn't mess with it
+# zimbraAuthTokenValidityValue
+# zimbraAuthTokens
+
+### Like the above, but less so
+### (just doesn't seem migration-appropriate)
+# zimbraAvailableLocale
+# zimbraAvailableSkin
+# zimbraBatchedIndexingSize
+# zimbraCOSId (will be different from system to system,
+#              and if we automate CoS migration, we still
+#              would be mangling this elsewhere)
+
+
+### Account attributes used for settings transfer
+zimbra_account_attributes = [ 'zimbraAccountStatus',
+        # non-zimbra items
+        'cn','co','company','description','facsimileTelephoneNumber',
+        'givenName','homePhone','initials','l','mail','mobile','ou','pager',
+        'physicalDeliveryOfficeName','postalCode','sn','st','street',
+        'telephoneNumber','title'
+        # zimbra poilcy stuff
+        'zimbraAllowAnyFromAddress','zimbraAllowFromAddress','zimbraAttachmentsBlocked',
+        'zimbraAuthTokenLifetime',
+        # ldap integration
+        'zimbraAuthLdapExternalDn',
+        # settings
+        'zimbraAttachmentsViewInHtmlOnly',
+        # NE feature-level stuff
+        'zimbraAttachmentsIndexingEnabled'
+        ]
+
+### left off: zimbraCOSId
+
 ### Ripped from stackoverflow
 ### Current host I'm working with borks on tls negotiations supporting 1.2
 # Start of the workaround for SSL3
