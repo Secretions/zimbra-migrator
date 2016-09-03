@@ -55,6 +55,15 @@ args = ''
 ### Just shouldn't mess with it
 # zimbraAuthTokenValidityValue
 # zimbraAuthTokens
+# zimbraCalendarCalDavSharedFolderCacheDuration
+# zimbraCalendarCalDavSyncEnd
+# zimbraCalendarCalDavSyncStart
+# zimbraCalendarLocationDisabledFields
+# zimbraCalendarMaxRevisions
+# zimbraConverterHints
+# zimbraCreateTimestamp
+# zimbraCsrfTokenData
+# zimbraDebugInfo
 
 ### Like the above, but less so
 ### (just doesn't seem migration-appropriate)
@@ -64,7 +73,36 @@ args = ''
 # zimbraCOSId (will be different from system to system,
 #              and if we automate CoS migration, we still
 #              would be mangling this elsewhere)
+# zimbraCalendarKeepExceptionsOnSeriesTimeChange
+# zimbraCalendarShowResourceTabs
+# zimbraContactMaxNumEntries - Affects resource usage,
+#  almost belongs in "just shouldn't mess with it", but
+#  some users go insane enough to hit this...
+# zimbraContactRankingTableSize
+# zimbraCustomerCareTier - ....uhhh what...?
+# zimbraDataSourceCaldavPollingInterval
+# zimbraDataSourceCalendarPollingInterval
+# zimbraDataSourceGalPollingInterval
+# zimbraDataSourceImapPollingInterval
+# zimbraDataSourceLivePollingInterval
+# zimbraDataSourceMinPollingInterval
+# zimbraDataSourcePollingInterval
+# zimbraDataSourcePop3PollingInterval
+# zimbraDataSourceRssPollingInterval
+# zimbraDataSourceYabPollingInterval
 
+### deprecated features
+# zimbraChildAccount (8.5.0)
+# zimbraChildVisibleAccount (8.5.)
+# zimbraContactAutoCompleteEmailFields (6.0.7)
+
+### Zimbra Community
+# zimbraCommunityAPIClientID
+# zimbraCommunityAPIClientSecret
+# zimbraCommunityBaseURL
+# zimbraCommunityHomeURL
+# zimbraCommunityID
+# zimbraCommunityUsernameMapping
 
 ### Account attributes used for settings transfer
 zimbra_account_attributes = [ 'zimbraAccountStatus',
@@ -79,12 +117,15 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         # ldap integration
         'zimbraAuthLdapExternalDn',
         # settings
-        'zimbraAttachmentsViewInHtmlOnly',
+        'zimbraAttachmentsViewInHtmlOnly','zimbraCalendarReminderDeviceEmail',
+        'zimbraCalendarResourceDoubleBookingAllowed',
+        # iffy settings
+        'zimbraContactAutoCompleteMaxResults','zimbraContactEmailFields',
         # NE feature-level stuff
         'zimbraAttachmentsIndexingEnabled'
         ]
 
-### left off: zimbraCOSId
+### left off: zimbraDebugInfo
 
 ### Ripped from stackoverflow
 ### Current host I'm working with borks on tls negotiations supporting 1.2
