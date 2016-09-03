@@ -196,6 +196,10 @@ def signatures(account):
 
         try:
             dest_mail.namespace = 'urn:zimbraAccount'
+            dest_sigs = dest_mail.GetSignatures()
+            for sig_iter in dest_sigs.signature:
+                if sig_iter['name'] == sig['name']:
+                    dest_mail.DeleteSignature(signature = {'name':sig['name'], 'value':''})
             dest_mail.CreateSignature(sig)
         except pysimplesoap.client.SoapFault, e:
             # If signature already exists, sweet!
