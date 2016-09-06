@@ -42,6 +42,11 @@ args = ''
 # zimbraAdminAuthTokenLifetime - More a system-level decision
 # zimbraAdminConsoleUIComponents
 # zimbraAdminSavedSearches
+# zimbraDomainAdminMaxMailQuota
+# zimbraFeatureAdminMailEnabled
+# zimbraIsAdminAccount
+# zimbraIsDelegatedAdminAccount
+# zimbraIsDomainAdminAccount
 
 ### Archiving stuff
 # zimbraArchiveAccount
@@ -64,6 +69,10 @@ args = ''
 # zimbraCreateTimestamp
 # zimbraCsrfTokenData
 # zimbraDebugInfo
+# zimbraLastLogonTimestamp
+# zimbraLogOutFromAllServers
+# zimbraMailIdleSessionTimeout
+# zimbraMailboxLocationBeforeMove
 
 ### Like the above, but less so
 ### (just doesn't seem migration-appropriate)
@@ -90,11 +99,30 @@ args = ''
 # zimbraDataSourcePop3PollingInterval
 # zimbraDataSourceRssPollingInterval
 # zimbraDataSourceYabPollingInterval
+# zimbraDefaultFolderFlags
+# zimbraExternalImapHostname
+# zimbraExternalImapPort
+# zimbraExternalImapSSLHostname
+# zimbraExternalImapSSLPort
+# zimbraExternalPop3Hostname
+# zimbraExternalPop3Port
+# zimbraExternalPop3SSLHostname
+# zimbraExternalPop3SSLPort
+# zimbraMailMessageLifetime
+# zimbraMailSignatureMaxLength
+# zimbraMailSpamLifetime
+# zimbraMemberOf
+# zimbraProxyAllowedDomains
 
 ### deprecated features
 # zimbraChildAccount (8.5.0)
 # zimbraChildVisibleAccount (8.5.)
 # zimbraContactAutoCompleteEmailFields (6.0.7)
+# These three don't say deprecated, but pretty sure they go with the google
+# docs-esque "beta" functionality removed after 7.x.x
+# zimbraFeatureBriefcaseSpreadsheetEnabled
+# zimbraFeatureBriefcaseSlidesEnabled
+# zimbraFeatureBriefcaseSpreadsheetEnabled
 
 ### Zimbra Community
 # zimbraCommunityAPIClientID
@@ -104,7 +132,128 @@ args = ''
 # zimbraCommunityID
 # zimbraCommunityUsernameMapping
 
+### zimbraDevice features
+# zimbraDeviceAllowedPasscodeLockoutDuration
+# zimbraDeviceCalendarSoftDeleteExcludePattern
+# zimbraDeviceFileOpenWithEnabled
+# zimbraDeviceLockWhenInactive
+# zimbraDeviceOfflineCacheEnabled
+# zimbraDevicePasscodeEnabled
+# zimbraDevicePasscodeLockoutDuration
+
+### zimbraMobile
+# zimbraMobileAttachSkippedItemEnabled
+# zimbraMobileForceProtocol25
+# zimbraMobileForceSamsungProtocol25
+# zimbraMobileItemsToTrackPerFolderMaxSize
+# zimbraMobileMetadataMaxSizeEnabled
+# zimbraMobileNotificationAdminAddress
+# zimbraMobileNotificationEnabled
+# zimbraMobileOutlookSyncEnabled
+# zimbraMobilePolicyAllowBluetooth
+# zimbraMobilePolicyAllowBrowser
+# zimbraMobilePolicyAllowCamera
+# zimbraMobilePolicyAllowConsumerEmail
+# zimbraMobilePolicyAllowDesktopSync
+# zimbraMobilePolicyAllowHTMLEmail
+# zimbraMobilePolicyAllowInternetSharing
+# zimbraMobilePolicyAllowIrDA
+# zimbraMobilePolicyAllowNonProvisionableDevices
+# zimbraMobilePolicyAllowPOPIMAPEmail
+# zimbraMobilePolicyAllowPartialProvisioning
+# zimbraMobilePolicyAllowRemoteDesktop
+# zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation
+# zimbraMobilePolicyAllowSMIMESoftCerts
+# zimbraMobilePolicyAllowSimpleDevicePassword
+# zimbraMobilePolicyAllowStorageCard
+# zimbraMobilePolicyAllowTextMessaging
+# zimbraMobilePolicyAllowUnsignedApplications
+# zimbraMobilePolicyAllowUnsignedInstallationPackages
+# zimbraMobilePolicyAllowWiFi
+# zimbraMobilePolicyAlphanumericDevicePasswordRequired
+# zimbraMobilePolicyApprovedApplication
+# zimbraMobilePolicyApprovedApplicationList
+# zimbraMobilePolicyDeviceEncryptionEnabled
+# zimbraMobilePolicyDevicePasswordEnabled
+# zimbraMobilePolicyDevicePasswordExpiration
+# zimbraMobilePolicyDevicePasswordHistory
+# zimbraMobilePolicyMaxCalendarAgeFilter
+# zimbraMobilePolicyMaxDevicePasswordFailedAttempts
+# zimbraMobilePolicyMaxEmailAgeFilter
+# zimbraMobilePolicyMaxEmailBodyTruncationSize
+# zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize
+# zimbraMobilePolicyMaxInactivityTimeDeviceLock
+# zimbraMobilePolicyMinDevicePasswordComplexCharacters
+# zimbraMobilePolicyMinDevicePasswordLength
+# zimbraMobilePolicyPasswordRecoveryEnabled
+# zimbraMobilePolicyRefreshInterval
+# zimbraMobilePolicyRequireDeviceEncryption
+# zimbraMobilePolicyRequireEncryptedSMIMEMessages
+# zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm
+# zimbraMobilePolicyRequireManualSyncWhenRoaming
+# zimbraMobilePolicyRequireSignedSMIMEAlgorithm
+# zimbraMobilePolicyRequireSignedSMIMEMessages
+# zimbraMobilePolicyRequireStorageCardEncryption
+# zimbraMobilePolicySuppressDeviceEncryption
+# zimbraMobilePolicyUnapprovedInROMApplication
+# zimbraMobileShareContactEnabled
+# zimbraMobileSmartForwardRFC822Enabled
+# zimbraMobileSyncKeyFormatConvertedFolders
+# zimbraMobileSyncRedoMaxAttempts
+# zimbraMobileTombstoneEnabled
+
+### zimbraPassword
+# zimbraPasswordAllowedChars
+# zimbraPasswordAllowedPunctuationChars
+# zimbraPasswordEnforceHistory
+# zimbraPasswordHistory
+# zimbraPasswordLocked
+# zimbraPasswordLockoutDuration
+# zimbraPasswordLockoutEnabled
+# zimbraPasswordLockoutFailureLifetime
+# zimbraPasswordLockoutFailureTime
+# zimbraPasswordLockoutLockedTime
+# zimbraPasswordLockoutMaxFailures
+# zimbraPasswordMaxAge
+# zimbraPasswordMaxLength
+# zimbraPasswordMinAge
+# zimbraPasswordMinAlphaChars
+# zimbraPasswordMinDigitsOrPuncs
+# zimbraPasswordMinLength
+# zimbraPasswordMinLowerCaseChars
+# zimbraPasswordMinNumericChars
+# zimbraPasswordMinPunctuationChars
+# zimbraPasswordMinUpperCaseChars
+# zimbraPasswordModifiedTime
+# zimbraPasswordMustChange
+
+### Signature stuff
+# zimbraPrefMailSignature
+# zimbraPrefMailSignatureContactId
+# zimbraPrefMailSignatureEnabled
+# zimbraPrefMailSignatureHTML
+# zimbraPrefMailSignatureStyle
+# zimbraSignatureId
+# zimbraSignatureMaxNumEntries
+# zimbraSignatureMinNumEntries
+# zimbraSignatureName
+
+
+
+### upsell attributes
+# zimbraFeatureCalendarUpsellEnabled
+# zimbraFeatureCalendarUpsellURL
+# zimbraFeatureContactsUpsellEnabled
+# zimbraFeatureContactsUpsellURL
+# zimbraFeatureMailUpsellEnabled
+# zimbraFeatureMailUpsellURL
+# zimbraFeatureVoiceUpsellEnabled
+# zimbraFeatureVoiceUpsellURL
+# wtf, no briefcase upsell?
+
 ### Account attributes used for settings transfer
+# I could potentially break these up (and then maybe even include some above stuff)
+# But for now, these are what we look at, full stop...
 zimbra_account_attributes = [ 'zimbraAccountStatus',
         # non-zimbra items
         'cn','co','company','description','facsimileTelephoneNumber',
@@ -113,16 +262,417 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         'telephoneNumber','title'
         # zimbra poilcy stuff
         'zimbraAllowAnyFromAddress','zimbraAllowFromAddress','zimbraAttachmentsBlocked',
-        'zimbraAuthTokenLifetime',
+        'zimbraAuthTokenLifetime', 'zimbraFeatureChangePasswordEnabled',
+        'zimbraFeatureExportFolderEnabled', 'zimbraFeatureFiltersEnabled',
+        'zimbraFeatureFlaggingEnabled', 'zimbraFeatureFreeBusyViewEnabled',
+        'zimbraFeatureFromDisplayEnabled', 'zimbraFeatureGalAutoCompleteEnabled',
+        'zimbraFeatureGalSyncEnabled', 'zimbraFeatureHtmlComposeEnabled',
         # ldap integration
         'zimbraAuthLdapExternalDn',
         # settings
         'zimbraAttachmentsViewInHtmlOnly','zimbraCalendarReminderDeviceEmail',
-        'zimbraCalendarResourceDoubleBookingAllowed',
+        'zimbraCalendarResourceDoubleBookingAllowed', 'zimbraExternalShareDomainWhitelistEnabled',
+        'zimbraExternalShareLifetime', 'zimbraExternalShareWhitelistDomain',
+        'zimbraExternalSharingEnabled', 'zimbraExternalUserMailAddress',
+        'zimbraFeatureAntispamEnabled', 'zimbraFeatureCalendarReminderDeviceEmailEnabled',
+        'zimbraFeatureComposeInNewWindowEnabled', 'zimbraFeatureConfirmationPageEnabled',
+        'zimbraFeatureContactsDetailedSearchEnabled', 'zimbraFeatureCrocodocEnabled', # not sure about crocodoc either
+        'zimbraFeatureDiscardInFiltersEnabled', 'zimbraFeatureDistributionListExpandMembersEnabled',
+        'zimbraFeatureDistributionListFolderEnabled', 'zimbraFeatureExternalFeedbackEnabled',
+        # dumpster
+        'zimbraDumpsterEnabled', 'zimbraDumpsterPurgeEnabled',
+        'zimbraDumpsterUserVisibleAge',
         # iffy settings
         'zimbraContactAutoCompleteMaxResults','zimbraContactEmailFields',
         # NE feature-level stuff
-        'zimbraAttachmentsIndexingEnabled'
+        'zimbraAttachmentsIndexingEnabled', 'zimbraExcludeFromCMBSearch',
+        'zimbraFeatureAdvancedSearchEnabled', 'zimbraFeatureConversationsEnabled',
+        'zimbraFeatureEwsEnabled', 'zimbraFeatureGalEnabled',
+        'zimbraFeatureGroupCalendarEnabled', 'zimbraFeatureIMEnabled', # think im is deprecated, but maybe they're reusing for upcoming chat?
+        'zimbraFeatureMAPIConnectorEnabled',
+        # core features
+        'zimbraFeatureBriefcasesEnabled', 'zimbraFeatureCalendarEnabled',
+        'zimbraFeatureContactsEnabled', 'zimbraFeatureMailEnabled',
+        # unsorted, but nothing damning
+        'zimbraFeatureIdentitiesEnabled',
+        'zimbraFeatureImapDataSourceEnabled',
+        'zimbraFeatureImportExportFolderEnabled',
+        'zimbraFeatureImportFolderEnabled',
+        'zimbraFeatureInitialSearchPreferenceEnabled',
+        'zimbraFeatureInstantNotify',
+        'zimbraFeatureMailForwardingEnabled',
+        'zimbraFeatureMailForwardingInFiltersEnabled',
+        'zimbraFeatureMailPollingIntervalPreferenceEnabled',
+        'zimbraFeatureMailPriorityEnabled',
+        'zimbraFeatureMailSendLaterEnabled',
+        'zimbraFeatureManageSMIMECertificateEnabled',
+        'zimbraFeatureManageZimlets',
+        'zimbraFeatureMobilePolicyEnabled',
+        'zimbraFeatureMobileSyncEnabled',
+        'zimbraFeatureNewAddrBookEnabled',
+        'zimbraFeatureNewMailNotificationEnabled',
+        'zimbraFeatureNotebookEnabled',
+        'zimbraFeatureOpenMailInNewWindowEnabled',
+        'zimbraFeatureOptionsEnabled',
+        'zimbraFeatureOutOfOfficeReplyEnabled',
+        'zimbraFeaturePeopleSearchEnabled',
+        'zimbraFeaturePop3DataSourceEnabled',
+        'zimbraFeaturePortalEnabled',
+        'zimbraFeaturePriorityInboxEnabled',
+        'zimbraFeatureReadReceiptsEnabled',
+        'zimbraFeatureSMIMEEnabled',
+        'zimbraFeatureSavedSearchesEnabled',
+        'zimbraFeatureSharingEnabled',
+        'zimbraFeatureShortcutAliasesEnabled',
+        'zimbraFeatureSignaturesEnabled',
+        'zimbraFeatureSkinChangeEnabled',
+        'zimbraFeatureSocialEnabled',
+        'zimbraFeatureSocialExternalEnabled',
+        'zimbraFeatureSocialExternalURL',
+        'zimbraFeatureSocialFiltersEnabled',
+        'zimbraFeatureSocialName',
+        'zimbraFeatureSocialcastEnabled',
+        'zimbraFeatureTaggingEnabled',
+        'zimbraFeatureTasksEnabled',
+        'zimbraFeatureTouchClientEnabled',
+        'zimbraFeatureViewInHtmlEnabled',
+        'zimbraFeatureVoiceChangePinEnabled',
+        'zimbraFeatureVoiceEnabled',
+        'zimbraFeatureWebClientOfflineAccessEnabled',
+        'zimbraFeatureWebSearchEnabled',
+        'zimbraFeatureZimbraAssistantEnabled',
+        'zimbraFileAndroidCrashReportingEnabled',
+        'zimbraFileDeletionNotificationBody',
+        'zimbraFileDeletionNotificationSubject',
+        'zimbraFileExpirationWarningBody',
+        'zimbraFileExpirationWarningSubject',
+        'zimbraFileExpirationWarningThreshold',
+        'zimbraFileExternalShareLifetime',
+        'zimbraFileIOSCrashReportingEnabled',
+        'zimbraFileLifetime',
+        'zimbraFilePreviewMaxSize',
+        'zimbraFilePublicShareLifetime',
+        'zimbraFileShareLifetime',
+        'zimbraFileUploadMaxSizePerFile',
+        'zimbraFileVersionLifetime',
+        'zimbraFileVersioningEnabled',
+        'zimbraFilterBatchSize',
+        'zimbraFilterSleepInterval',
+        'zimbraForceClearCookies',
+        'zimbraForeignPrincipal',
+        'zimbraFreebusyExchangeAuthPassword',
+        'zimbraFreebusyExchangeAuthScheme',
+        'zimbraFreebusyExchangeAuthUsername',
+        'zimbraFreebusyExchangeCachedInterval',
+        'zimbraFreebusyExchangeCachedIntervalStart',
+        'zimbraFreebusyExchangeURL',
+        'zimbraFreebusyExchangeUserOrg',
+        'zimbraFreebusyLocalMailboxNotActive',
+        'zimbraGalSyncAccountBasedAutoCompleteEnabled',
+        'zimbraIMAvailableInteropGateways',
+        'zimbraIMService',
+        'zimbraIdentityMaxNumEntries',
+        'zimbraImapEnabled',
+        'zimbraInterceptAddress',
+        'zimbraInterceptBody',
+        'zimbraInterceptFrom',
+        'zimbraInterceptSendHeadersOnly',
+        'zimbraInterceptSubject',
+        'zimbraInternalSendersDomain',
+        'zimbraIsCustomerCareAccount',
+        'zimbraIsExternalVirtualAccount',
+        'zimbraIsSystemAccount',
+        'zimbraIsSystemResource',
+        'zimbraJunkMessagesIndexingEnabled',
+        'zimbraLocale',
+        'zimbraMailAllowReceiveButNotSendWhenOverQuota',
+        'zimbraMailBlacklistMaxNumEntries',
+        'zimbraMailDumpsterLifetime',
+        'zimbraMailForwardingAddressMaxLength',
+        'zimbraMailForwardingAddressMaxNumAddrs',
+        'zimbraMailHighlightObjectsMaxSize',
+        'zimbraMailMinPollingInterval',
+        'zimbraMailOutgoingSieveScript',
+        'zimbraMailPurgeUseChangeDateForSpam',
+        'zimbraMailPurgeUseChangeDateForTrash',
+        'zimbraMailQuota',
+        'zimbraMailSieveScript',
+        'zimbraMailThreadingAlgorithm',
+        'zimbraMailTrashLifetime',
+        'zimbraMailTrustedSenderListMaxNumEntries',
+        'zimbraMailWhitelistMaxNumEntries',
+        'zimbraMaxContactsPerPage',
+        'zimbraMaxMailItemsPerPage',
+        'zimbraMaxVoiceItemsPerPage',
+        'zimbraNewMailNotificationBody',
+        'zimbraNewMailNotificationFrom',
+        'zimbraNewMailNotificationSubject',
+        'zimbraNotebookMaxRevisions',
+        'zimbraNotebookSanitizeHtml',
+        'zimbraNotes',
+        'zimbraPasswordAllowedChars',
+        'zimbraPasswordAllowedPunctuationChars',
+        'zimbraPasswordEnforceHistory',
+        'zimbraPasswordHistory',
+        'zimbraPasswordLocked',
+        'zimbraPasswordLockoutDuration',
+        'zimbraPasswordLockoutEnabled',
+        'zimbraPasswordLockoutFailureLifetime',
+        'zimbraPasswordLockoutFailureTime',
+        'zimbraPasswordLockoutLockedTime',
+        'zimbraPasswordLockoutMaxFailures',
+        'zimbraPasswordMaxAge',
+        'zimbraPasswordMaxLength',
+        'zimbraPasswordMinAge',
+        'zimbraPasswordMinAlphaChars',
+        'zimbraPasswordMinDigitsOrPuncs',
+        'zimbraPasswordMinLength',
+        'zimbraPasswordMinLowerCaseChars',
+        'zimbraPasswordMinNumericChars',
+        'zimbraPasswordMinPunctuationChars',
+        'zimbraPasswordMinUpperCaseChars',
+        'zimbraPasswordModifiedTime',
+        'zimbraPasswordMustChange',
+        'zimbraPhoneticCompany',
+        'zimbraPhoneticFirstName',
+        'zimbraPhoneticLastName',
+        'zimbraPop3Enabled',
+        'zimbraPortalName',
+        'zimbraPrefAccountTreeOpen',
+        'zimbraPrefAdminConsoleWarnOnExit',
+        'zimbraPrefAdvancedClientEnforceMinDisplay',
+        'zimbraPrefAllowAddressForDelegatedSender',
+        'zimbraPrefAppleIcalDelegationEnabled',
+        'zimbraPrefAutoAddAddressEnabled',
+        'zimbraPrefAutoCompleteQuickCompletionOnComma',
+        'zimbraPrefAutoSaveDraftInterval',
+        'zimbraPrefAutocompleteAddressBubblesEnabled',
+        'zimbraPrefBccAddress',
+        'zimbraPrefBriefcaseReadingPaneLocation',
+        'zimbraPrefCalendarAcceptSignatureId',
+        'zimbraPrefCalendarAllowCancelEmailToSelf',
+        'zimbraPrefCalendarAllowForwardedInvite',
+        'zimbraPrefCalendarAllowPublishMethodInvite',
+        'zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply',
+        'zimbraPrefCalendarAlwaysShowMiniCal',
+        'zimbraPrefCalendarApptAllowAtendeeEdit',
+        'zimbraPrefCalendarApptReminderWarningTime',
+        'zimbraPrefCalendarApptVisibility',
+        'zimbraPrefCalendarAutoAcceptSignatureId',
+        'zimbraPrefCalendarAutoAddInvites',
+        'zimbraPrefCalendarAutoDeclineSignatureId',
+        'zimbraPrefCalendarAutoDenySignatureId',
+        'zimbraPrefCalendarDayHourEnd',
+        'zimbraPrefCalendarDayHourStart',
+        'zimbraPrefCalendarDeclineSignatureId',
+        'zimbraPrefCalendarDefaultApptDuration',
+        'zimbraPrefCalendarFirstDayOfWeek',
+        'zimbraPrefCalendarForwardInvitesTo',
+        'zimbraPrefCalendarInitialCheckedCalendars',
+        'zimbraPrefCalendarInitialView',
+        'zimbraPrefCalendarNotifyDelegatedChanges',
+        'zimbraPrefCalendarReminderDeviceInfo',
+        'zimbraPrefCalendarReminderDuration1',
+        'zimbraPrefCalendarReminderDuration2',
+        'zimbraPrefCalendarReminderEmail',
+        'zimbraPrefCalendarReminderFlashTitle',
+        'zimbraPrefCalendarReminderMobile',
+        'zimbraPrefCalendarReminderSendEmail',
+        'zimbraPrefCalendarReminderSoundsEnabled',
+        'zimbraPrefCalendarReminderYMessenger',
+        'zimbraPrefCalendarSendInviteDeniedAutoReply',
+        'zimbraPrefCalendarShowDeclinedMeetings',
+        'zimbraPrefCalendarShowPastDueReminders',
+        'zimbraPrefCalendarTentativeSignatureId',
+        'zimbraPrefCalendarToasterEnabled',
+        'zimbraPrefCalendarUseQuickAdd',
+        'zimbraPrefCalendarViewTimeInterval',
+        'zimbraPrefCalendarWorkingHours',
+        'zimbraPrefChildVisibleAccount',
+        'zimbraPrefClientType',
+        'zimbraPrefColorMessagesEnabled',
+        'zimbraPrefComposeDirection',
+        'zimbraPrefComposeFormat',
+        'zimbraPrefComposeInNewWindow',
+        'zimbraPrefContactsDisableAutocompleteOnContactGroupMembers',
+        'zimbraPrefContactsExpandAppleContactGroups',
+        'zimbraPrefContactsInitialView',
+        'zimbraPrefContactsPerPage',
+        'zimbraPrefConvReadingPaneLocation',
+        'zimbraPrefConvShowCalendar',
+        'zimbraPrefConversationOrder',
+        'zimbraPrefDedupeMessagesSentToSelf',
+        'zimbraPrefDefaultPrintFontSize',
+        'zimbraPrefDefaultSignatureId',
+        'zimbraPrefDelegatedSendSaveTarget',
+        'zimbraPrefDeleteInviteOnReply',
+        'zimbraPrefDisabledZimlets',
+        'zimbraPrefDisplayExternalImages',
+        'zimbraPrefExternalSendersType',
+        'zimbraPrefFileSharingApplication',
+        'zimbraPrefFolderColorEnabled',
+        'zimbraPrefFolderTreeOpen',
+        'zimbraPrefFont',
+        'zimbraPrefFontSize',
+        'zimbraPrefForwardIncludeOriginalText',
+        'zimbraPrefForwardReplyFormat',
+        'zimbraPrefForwardReplyInOriginalFormat',
+        'zimbraPrefForwardReplyPrefixChar',
+        'zimbraPrefForwardReplySignatureId',
+        'zimbraPrefFromAddress',
+        'zimbraPrefFromAddressType',
+        'zimbraPrefFromDisplay',
+        'zimbraPrefGalAutoCompleteEnabled',
+        'zimbraPrefGalSearchEnabled',
+        'zimbraPrefGetMailAction',
+        'zimbraPrefGroupMailBy',
+        'zimbraPrefHtmlEditorDefaultFontColor',
+        'zimbraPrefHtmlEditorDefaultFontFamily',
+        'zimbraPrefHtmlEditorDefaultFontSize',
+        'zimbraPrefIMAutoLogin',
+        'zimbraPrefIMBuddyListSort',
+        'zimbraPrefIMCustomStatusMessage',
+        'zimbraPrefIMFlashIcon',
+        'zimbraPrefIMFlashTitle',
+        'zimbraPrefIMHideBlockedBuddies',
+        'zimbraPrefIMHideOfflineBuddies',
+        'zimbraPrefIMIdleStatus',
+        'zimbraPrefIMIdleTimeout',
+        'zimbraPrefIMInstantNotify',
+        'zimbraPrefIMLogChats',
+        'zimbraPrefIMLogChatsEnabled',
+        'zimbraPrefIMNotifyPresence',
+        'zimbraPrefIMNotifyStatus',
+        'zimbraPrefIMReportIdle',
+        'zimbraPrefIMSoundsEnabled',
+        'zimbraPrefIMToasterEnabled',
+        'zimbraPrefIMYahooId',
+        'zimbraPrefIdentityName',
+        'zimbraPrefImapSearchFoldersEnabled',
+        'zimbraPrefInboxReadLifetime',
+        'zimbraPrefInboxUnreadLifetime',
+        'zimbraPrefIncludeSharedItemsInSearch',
+        'zimbraPrefIncludeSpamInSearch',
+        'zimbraPrefIncludeTrashInSearch',
+        'zimbraPrefItemsPerVirtualPage',
+        'zimbraPrefJunkLifetime',
+        'zimbraPrefLabel',
+        'zimbraPrefListViewColumns',
+        'zimbraPrefLocale',
+        'zimbraPrefMailDefaultCharset',
+        'zimbraPrefMailFlashIcon',
+        'zimbraPrefMailFlashTitle',
+        'zimbraPrefMailFoldersCheckedForNewMsgIndicator',
+        'zimbraPrefMailForwardingAddress',
+        'zimbraPrefMailInitialSearch',
+        'zimbraPrefMailItemsPerPage',
+        'zimbraPrefMailLocalDeliveryDisabled',
+        'zimbraPrefMailPollingInterval',
+        'zimbraPrefMailRequestReadReceipts',
+        'zimbraPrefMailSMIMECertificate',
+        'zimbraPrefMailSelectAfterDelete',
+        'zimbraPrefMailSendReadReceipts',
+        'zimbraPrefMailSoundsEnabled',
+        'zimbraPrefMailToasterEnabled',
+        'zimbraPrefMailTrustedSenderList',
+        'zimbraPrefMandatorySpellCheckEnabled',
+        'zimbraPrefMarkMsgRead',
+        'zimbraPrefMessageIdDedupingEnabled',
+        'zimbraPrefMessageViewHtmlPreferred',
+        'zimbraPrefNewMailNotificationAddress',
+        'zimbraPrefNewMailNotificationEnabled',
+        'zimbraPrefOpenMailInNewWindow',
+        'zimbraPrefOutOfOfficeCacheDuration',
+        'zimbraPrefOutOfOfficeDirectAddress',
+        'zimbraPrefOutOfOfficeExternalReply',
+        'zimbraPrefOutOfOfficeExternalReplyEnabled',
+        'zimbraPrefOutOfOfficeFreeBusyStatus',
+        'zimbraPrefOutOfOfficeFromDate',
+        'zimbraPrefOutOfOfficeReply',
+        'zimbraPrefOutOfOfficeReplyEnabled',
+        'zimbraPrefOutOfOfficeStatusAlertOnLogin',
+        'zimbraPrefOutOfOfficeSuppressExternalReply',
+        'zimbraPrefOutOfOfficeUntilDate',
+        'zimbraPrefPop3DeleteOption',
+        'zimbraPrefPop3DownloadSince',
+        'zimbraPrefPop3IncludeSpam',
+        'zimbraPrefQuickCommand',
+        'zimbraPrefReadReceiptsToAddress',
+        'zimbraPrefReadingPaneEnabled',
+        'zimbraPrefReadingPaneLocation',
+        'zimbraPrefReplyIncludeOriginalText',
+        'zimbraPrefReplyToAddress',
+        'zimbraPrefReplyToDisplay',
+        'zimbraPrefReplyToEnabled',
+        'zimbraPrefSaveToSent',
+        'zimbraPrefSearchTreeOpen',
+        'zimbraPrefSentLifetime',
+        'zimbraPrefSentMailFolder',
+        'zimbraPrefSharedAddrBookAutoCompleteEnabled',
+        'zimbraPrefShortEmailAddress',
+        'zimbraPrefShortcuts',
+        'zimbraPrefShowCalendarWeek',
+        'zimbraPrefShowComposeDirection',
+        'zimbraPrefShowFragments',
+        'zimbraPrefShowSearchString',
+        'zimbraPrefShowSelectionCheckbox',
+        'zimbraPrefSkin',
+        'zimbraPrefSortOrder',
+        'zimbraPrefSpellDictionary',
+        'zimbraPrefSpellIgnoreAllCaps',
+        'zimbraPrefSpellIgnorePattern',
+        'zimbraPrefSpellIgnoreWord',
+        'zimbraPrefStandardClientAccessibilityMode',
+        'zimbraPrefTagTreeOpen',
+        'zimbraPrefTasksFilterBy',
+        'zimbraPrefTasksReadingPaneLocation',
+        'zimbraPrefTimeZoneId',
+        'zimbraPrefTrashLifetime',
+        'zimbraPrefUseDefaultIdentitySettings',
+        'zimbraPrefUseKeyboardShortcuts',
+        'zimbraPrefUseRfc2231',
+        'zimbraPrefUseSendMsgShortcut',
+        'zimbraPrefUseTimeZoneListInCalendar',
+        'zimbraPrefVoiceItemsPerPage',
+        'zimbraPrefWarnOnExit',
+        'zimbraPrefWebClientOfflineBrowserKey',
+        'zimbraPrefWhenInFolderIds',
+        'zimbraPrefWhenInFoldersEnabled',
+        'zimbraPrefWhenSentToAddresses',
+        'zimbraPrefWhenSentToEnabled',
+        'zimbraPrefZimletTreeOpen',
+        'zimbraPrefZimlets',
+        'zimbraPublicShareLifetime',
+        'zimbraPublicSharingEnabled',
+        'zimbraQuotaLastWarnTime',
+        'zimbraQuotaWarnInterval',
+        'zimbraQuotaWarnMessage',
+        'zimbraQuotaWarnPercent',
+        'zimbraReverseProxyUseExternalRoute',
+        'zimbraShareInfo',
+        'zimbraShareLifetime',
+        'zimbraSharedItem',
+        'zimbraSmtpEnableTrace',
+        'zimbraSmtpRestrictEnvelopeFrom',
+        'zimbraSocialcastURL',
+        'zimbraSpamApplyUserFilters',
+        'zimbraStandardClientCustomPrefTab',
+        'zimbraStandardClientCustomPrefTabsEnabled',
+        'zimbraSyncWindowSize',
+        'zimbraTextAnalyzer',
+        'zimbraTouchJSErrorTrackingEnabled',
+        'zimbraTouchJSErrorTrackingKey',
+        'zimbraUCPassword',
+        'zimbraUCServiceId',
+        'zimbraUCUsername',
+        'zimbraVersion',
+        'zimbraVirtualAccountInitialPasswordSet',
+        'zimbraWebClientOfflineSyncMaxDays',
+        'zimbraWebClientShowOfflineLink',
+        'zimbraYahooId',
+        'zimbraZimletAvailableZimlets',
+        'zimbraZimletLoadSynchronously',
+        'zimbraZimletUserProperties'
         ]
 
 ### left off: zimbraDebugInfo
