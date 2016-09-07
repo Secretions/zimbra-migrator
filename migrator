@@ -73,6 +73,10 @@ args = ''
 # zimbraLogOutFromAllServers
 # zimbraMailIdleSessionTimeout
 # zimbraMailboxLocationBeforeMove
+# mail (managed by adding addresses, and domain admins might not have access)
+# zimbraShareInfo
+# zimbraShareLifetime
+# zimbraSharedItem
 
 ### Like the above, but less so
 ### (just doesn't seem migration-appropriate)
@@ -237,8 +241,8 @@ args = ''
 # zimbraSignatureMaxNumEntries
 # zimbraSignatureMinNumEntries
 # zimbraSignatureName
-
-
+# zimbraPrefDefaultSignatureId
+# zimbraPrefForwardReplySignatureId
 
 ### upsell attributes
 # zimbraFeatureCalendarUpsellEnabled
@@ -257,7 +261,7 @@ args = ''
 zimbra_account_attributes = [ 'zimbraAccountStatus',
         # non-zimbra items
         'cn','co','company','description','facsimileTelephoneNumber',
-        'givenName','homePhone','initials','l','mail','mobile','ou','pager',
+        'givenName','homePhone','initials','l','mobile','ou','pager',
         'physicalDeliveryOfficeName','postalCode','sn','st','street',
         'telephoneNumber','title'
         # zimbra poilcy stuff
@@ -410,29 +414,6 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         'zimbraNotebookMaxRevisions',
         'zimbraNotebookSanitizeHtml',
         'zimbraNotes',
-        'zimbraPasswordAllowedChars',
-        'zimbraPasswordAllowedPunctuationChars',
-        'zimbraPasswordEnforceHistory',
-        'zimbraPasswordHistory',
-        'zimbraPasswordLocked',
-        'zimbraPasswordLockoutDuration',
-        'zimbraPasswordLockoutEnabled',
-        'zimbraPasswordLockoutFailureLifetime',
-        'zimbraPasswordLockoutFailureTime',
-        'zimbraPasswordLockoutLockedTime',
-        'zimbraPasswordLockoutMaxFailures',
-        'zimbraPasswordMaxAge',
-        'zimbraPasswordMaxLength',
-        'zimbraPasswordMinAge',
-        'zimbraPasswordMinAlphaChars',
-        'zimbraPasswordMinDigitsOrPuncs',
-        'zimbraPasswordMinLength',
-        'zimbraPasswordMinLowerCaseChars',
-        'zimbraPasswordMinNumericChars',
-        'zimbraPasswordMinPunctuationChars',
-        'zimbraPasswordMinUpperCaseChars',
-        'zimbraPasswordModifiedTime',
-        'zimbraPasswordMustChange',
         'zimbraPhoneticCompany',
         'zimbraPhoneticFirstName',
         'zimbraPhoneticLastName',
@@ -503,7 +484,6 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         'zimbraPrefConversationOrder',
         'zimbraPrefDedupeMessagesSentToSelf',
         'zimbraPrefDefaultPrintFontSize',
-        'zimbraPrefDefaultSignatureId',
         'zimbraPrefDelegatedSendSaveTarget',
         'zimbraPrefDeleteInviteOnReply',
         'zimbraPrefDisabledZimlets',
@@ -518,7 +498,6 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         'zimbraPrefForwardReplyFormat',
         'zimbraPrefForwardReplyInOriginalFormat',
         'zimbraPrefForwardReplyPrefixChar',
-        'zimbraPrefForwardReplySignatureId',
         'zimbraPrefFromAddress',
         'zimbraPrefFromAddressType',
         'zimbraPrefFromDisplay',
@@ -649,9 +628,6 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         'zimbraQuotaWarnMessage',
         'zimbraQuotaWarnPercent',
         'zimbraReverseProxyUseExternalRoute',
-        'zimbraShareInfo',
-        'zimbraShareLifetime',
-        'zimbraSharedItem',
         'zimbraSmtpEnableTrace',
         'zimbraSmtpRestrictEnvelopeFrom',
         'zimbraSocialcastURL',
@@ -733,6 +709,10 @@ def main(accounts):
         if args.signatures:
             print("\tSyncing signatures...")
             signatures(account)
+        # account preferences
+        if args.prefs:
+            print("\tSyncing preferences...")
+            prefs(account)
         # sharing (should go after calendars/contacts/briefacse)
         if args.sharing:
             print('\tSetting up shares...')
@@ -862,9 +842,10 @@ def signatures(account):
         try:
             dest_mail.namespace = 'urn:zimbraAccount'
             dest_sigs = dest_mail.GetSignatures()
-            for sig_iter in dest_sigs.signature:
-                if sig_iter['name'] == sig['name']:
-                    dest_mail.DeleteSignature(signature = {'name':sig['name'], 'value':''})
+            if 'signature' in dest_sigs:
+                for sig_iter in dest_sigs.signature:
+                    if sig_iter['name'] == sig['name']:
+                        dest_mail.DeleteSignature(signature = {'name':sig['name'], 'value':''})
             dest_mail.CreateSignature(sig)
         except pysimplesoap.client.SoapFault, e:
             # If signature already exists, sweet!
@@ -873,11 +854,49 @@ def signatures(account):
             else:
                 raise
 
+### account preferences
+def prefs(account):
+    print("Beginning account preference migration...")
+    # Get admin logins
+    source_admin = _get_admin_session('Source')
+    dest_account = _get_dest_address(account)
+    dest_admin = _get_admin_session('Dest')
+
+    source_attrs = source_admin.ParseAttributes(source_admin.GetAccount(account = {'by':'name', 'value':account}, attributes = {'applyCos':'0'}).a)
+    dest_attrs = dest_admin.ParseAttributes(dest_admin.GetAccount(account = {'by':'name', 'value':dest_account}, attributes = {'applyCos':'0'}).a)
+
+    #source_mail = _get_mail_session(source_admin, account, 'Source')
+    #source_mail.namespace = 'urn:zimbraAccount'
+    #print source_mail.GetInfo().as_xml(pretty=True)
+    #print source_mail.GetPrefs().as_xml(pretty=True)
+    #exit(0)
+
+    modify_account = pysimplesoap.simplexml.SimpleXMLElement('<ModifyAccountRequest><id>{0}</id></ModifyAccountRequest>'.format(dest_attrs['zimbraId'][0]))
+
+    for attr in source_attrs:
+        if attr in zimbra_account_attributes:
+            # We don't want stuff that is set on dest that is showing up as
+            # blank due to access on source to be unset
+            if source_attrs[attr][0] == '':
+                continue
+            if attr not in dest_attrs:
+                print("{0}: {1} -> ''".format(attr, source_attrs[attr]))
+                for value in source_attrs[attr]:
+                    child = modify_account.add_child('a', value)
+                    child['n'] = attr
+            elif attr not in dest_attrs or source_attrs[attr] != dest_attrs[attr]:
+                print("{0}: {1} -> {2}".format(attr, source_attrs[attr], dest_attrs[attr]))
+                for value in source_attrs[attr]:
+                    child = modify_account.add_child('a', value)
+                    child['n'] = attr
+    
+    # print modify_account.as_xml(pretty=True)
+
 
 ### sharing section
 
 def sharing(account):
-    print("Beginning Mail Migration, getting mail-only folder list...")
+    print("Beginning shared folder Migration...")
     # Get admin login from source server, and do delegate auth
     source_admin = _get_admin_session('Source')
     source_mail = _get_mail_session(source_admin, account, 'Source')
@@ -975,6 +994,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--no_changes', action='store_true', help='No changes (dry run)')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
     parser.add_argument('--signatures', action='store_true', help='Signatures')
+    parser.add_argument('--prefs', action='store_true', help='Account Preferences')
     parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
 
