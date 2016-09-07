@@ -709,9 +709,9 @@ def main(accounts):
         if args.signatures:
             print("\tSyncing signatures...")
             signatures(account)
-        # account preferences
-        if args.prefs:
-            print("\tSyncing preferences...")
+        # account attributes
+        if args.attrs:
+            print("\tSyncing attributes...")
             prefs(account)
         # sharing (should go after calendars/contacts/briefacse)
         if args.sharing:
@@ -854,8 +854,8 @@ def signatures(account):
             else:
                 raise
 
-### account preferences
-def prefs(account):
+### account attributes
+def attributes(account):
     print("Beginning account preference migration...")
     # Get admin logins
     source_admin = _get_admin_session('Source')
@@ -877,6 +877,8 @@ def prefs(account):
         if attr in zimbra_account_attributes:
             # We don't want stuff that is set on dest that is showing up as
             # blank due to access on source to be unset
+            # Zimbra really responds by putting pd=1 in the <a> tag,
+            # should probably switch to looking there...
             if source_attrs[attr][0] == '':
                 continue
             if attr not in dest_attrs:
@@ -994,7 +996,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--no_changes', action='store_true', help='No changes (dry run)')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
     parser.add_argument('--signatures', action='store_true', help='Signatures')
-    parser.add_argument('--prefs', action='store_true', help='Account Preferences')
+    parser.add_argument('--attrs', action='store_true', help='Account Attributes')
     parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
 
