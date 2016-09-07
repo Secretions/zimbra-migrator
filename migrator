@@ -880,12 +880,12 @@ def prefs(account):
             if source_attrs[attr][0] == '':
                 continue
             if attr not in dest_attrs:
-                print("{0}: {1} -> ''".format(attr, source_attrs[attr]))
+                print("\t{0}: {1} -> ''".format(attr, source_attrs[attr]))
                 for value in source_attrs[attr]:
                     child = modify_account.add_child('a', value)
                     child['n'] = attr
             elif attr not in dest_attrs or source_attrs[attr] != dest_attrs[attr]:
-                print("{0}: {1} -> {2}".format(attr, source_attrs[attr], dest_attrs[attr]))
+                print("\t{0}: {1} -> {2}".format(attr, source_attrs[attr], dest_attrs[attr]))
                 for value in source_attrs[attr]:
                     child = modify_account.add_child('a', value)
                     child['n'] = attr
