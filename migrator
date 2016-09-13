@@ -725,6 +725,10 @@ def main(accounts):
     if args.distlists:
         print('\tProvisioning distribution lists...')
         distlists()
+    # calendar resources
+    if args.resources:
+        print("\tProvisioning calendar resources")
+        resources()
     # aliases
     if args.aliases:
         print("\tSyncing non-account aliases...")
@@ -1130,6 +1134,19 @@ def _member_not_in_list(dest_data, member):
                 return False
     return True
 
+### resources
+def resources():
+    # This will remain TODO for now
+    # Domain I'm migrating doesn't have any resources
+    source_admin = _get_admin_session('Source')
+    dest_admin = _get_admin_session('Dest')
+
+    resources = source_admin.GetAllCalendarResources(domain = {'by':'name', 'value':config.get('Source', 'domain')})
+
+    print resources.as_xml(pretty=True)
+    print("Resources not in script yet!!")
+    exit(1)
+
 ### global helper functions
 def _get_dest_address(account):
     # Check if we're migrating to a different domain
@@ -1169,6 +1186,7 @@ if __name__ == '__main__':
     parser.add_argument('--attrs', action='store_true', help='Account Attributes')
     parser.add_argument('--aliases', action='store_true', help='Aliases')
     parser.add_argument('--distlists', action='store_true', help='Distribution Lists')
+    parser.add_argument('--resources', action='store_true', help='Calendar Resources')
     parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
 
