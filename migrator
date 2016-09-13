@@ -713,6 +713,10 @@ def main(accounts):
         if args.attrs:
             print("\tSyncing attributes...")
             attributes(account)
+        # aliases
+        if args.aliases:
+            print("\tSyncing aliases...")
+            account_aliases(account)
         # sharing (should go after calendars/contacts/briefacse)
         if args.sharing:
             print('\tSetting up shares...')
@@ -721,6 +725,10 @@ def main(accounts):
     if args.distlists:
         print('\tProvisioning distribution lists...')
         distlists()
+    # aliases
+    if args.aliases:
+        print("\tSyncing non-account aliases...")
+        distlist_aliases() 
 
 ### imapsync section
 
@@ -906,9 +914,81 @@ def attributes(account):
     # But doing it "manually" is just as good
     dest_admin.do_req('ModifyAccountRequest', modify_account)
 
+### aliases
+def account_aliases(account):
+    print("Beginning alias migration...")
+    # Get admin logins
+    source_admin = _get_admin_session('Source')
+    dest_account = _get_dest_address(account)
+    dest_admin = _get_admin_session('Dest')
+
+    source_attrs = source_admin.ParseAttributes(source_admin.GetAccount(account = {'by':'name', 'value':account}, attributes = {'applyCos':'0'}).a)
+    dest_attrs = dest_admin.ParseAttributes(dest_admin.GetAccount(account = {'by':'name', 'value':dest_account}, attributes = {'applyCos':'0'}).a)
+
+    if 'zimbraMailAlias' in source_attrs:
+        for alias in source_attrs['zimbraMailAlias']:
+            print("\t{0} has alias: {1}".format(account, alias))
+            if args.no_changes:
+                print("NO CHANGES: Not adding alias...")
+                continue
+            dest_alias = _get_dest_address(alias)
+            if 'zimbraMailAlias' in dest_attrs and dest_alias in dest_attrs['zimbraMailAlias']:
+                if args.verbose: print("\tAlias {0} already on account!".format(dest_alias))
+                continue
+            dest_admin.AddAccountAlias(id = {'value':dest_attrs['zimbraId'][0]}, alias = {'value':dest_alias})
+
+### distribution list aliases
+def distlist_aliases():
+    source_admin = _get_admin_session('Source')
+    dest_admin = _get_admin_session('Dest')
+
+    lists = source_admin.GetAllDistributionLists(domain = {'by':'name', 'value':config.get('Source', 'domain')})
+    #print lists.as_xml(pretty=True)
+
+    for dl in lists.dl:
+        print("\n\tChecking list {0}".format(dl['name']))
+        source_data = source_admin.GetDistributionList(dl = {'by':'name', 'value':dl['name']})
+        #print source_data.as_xml(pretty=True)
+
+        try:
+            dest_address = _get_dest_address(dl['name'])
+            dest_data = dest_admin.GetDistributionList(dl = {'by':'name', 'value':dest_address})
+        except pysimplesoap.client.SoapFault, e:
+            if re.search('no such distribution list', str(e)):
+                print("\tERROR: No such distribution list: {0}...\n".format(dest_address))
+            else:
+                raise
+        dest_attrs = dest_admin.ParseAttributes(dest_data.a)
+
+        dest_aliases = []
+        for a in dest_data.dl.a:
+            if a['n'] == 'zimbraMailAlias':
+                if a['pd']:
+                    print("\tERROR: No access to distribution list attribute!")
+                else:
+                    dest_aliases.append(str(a))
+
+        for a in source_data.dl.a:
+            if a['n'] == 'zimbraMailAlias':
+                if a['pd']:
+                    print("\tERROR: No access to distribution list attribute!")
+                    continue
+                dest_alias = _get_dest_address(str(a))
+                if dest_alias == dest_address:
+                    #print("\tNot an alias (account name)")
+                    continue
+                elif dest_alias in dest_aliases:
+                    if args.verbose: print("\tAlias {0} already provisioned".format(a))
+                else:
+                    print("\tList has alias: {0}".format(a))
+                    if args.no_changes:
+                        print("NO CHANGES: Not modifying distribution list...")
+                    else:
+                        dest_admin.AddDistributionListAlias(id = {'value':dest_attrs['zimbraId'][0]}, alias = {'value':dest_alias})
+
+
 
 ### sharing section
-
 def sharing(account):
     print("Beginning shared folder Migration...")
     # Get admin login from source server, and do delegate auth
@@ -1087,6 +1167,7 @@ if __name__ == '__main__':
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
     parser.add_argument('--signatures', action='store_true', help='Signatures')
     parser.add_argument('--attrs', action='store_true', help='Account Attributes')
+    parser.add_argument('--aliases', action='store_true', help='Aliases')
     parser.add_argument('--distlists', action='store_true', help='Distribution Lists')
     parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
