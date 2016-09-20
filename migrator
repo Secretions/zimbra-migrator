@@ -743,7 +743,7 @@ def imapsync(account):
     print("Beginning Mail Migration, getting mail-only folder list...")
     source_admin = _get_admin_session('Source')
     source_mail = _get_mail_session(source_admin, account, 'Source')
-    response = source_mail.GetFolder(attributes = { 'visible':1, 'view':'message', 'needGranteeName':'1' },
+    response = source_mail.GetFolder(attributes = { 'visible':1, 'view':'message,conversation', 'needGranteeName':'1' },
                                      folder     = {'value':'blah'})
     folders = []
     # go through every folder tag, we don't care the order/nesting
