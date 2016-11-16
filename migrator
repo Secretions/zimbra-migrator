@@ -269,7 +269,7 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
         'cn','co','company','description','facsimileTelephoneNumber',
         'givenName','homePhone','initials','l','mobile','ou','pager',
         'physicalDeliveryOfficeName','postalCode','sn','st','street',
-        'telephoneNumber','title'
+        'telephoneNumber','title',
         # zimbra poilcy stuff
         'zimbraAllowAnyFromAddress','zimbraAllowFromAddress','zimbraAttachmentsBlocked',
         'zimbraAuthTokenLifetime', 'zimbraFeatureChangePasswordEnabled',
