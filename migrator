@@ -846,13 +846,11 @@ def attributes(account):
     source_attrs = source_admin.ParseAttributes(source_admin.GetAccount(account = {'by':'name', 'value':account}, attributes = {'applyCos':'0'}).a)
     dest_attrs = dest_admin.ParseAttributes(dest_admin.GetAccount(account = {'by':'name', 'value':dest_account}, attributes = {'applyCos':'0'}).a)
 
-    #source_mail = _get_mail_session(source_admin, account, 'Source')
-    #source_mail.namespace = 'urn:zimbraAccount'
-    #print source_mail.GetInfo().as_xml(pretty=True)
-    #print source_mail.GetPrefs().as_xml(pretty=True)
-    #exit(0)
+    # List of attributes we don't have access to
+    bl_source_attrs = _get_blacklisted_attrs(source_admin.GetAccount(account = {'by':'name', 'value':account}, attributes = {'applyCos':'1'}).a)
+    bl_dest_attrs = _get_blacklisted_attrs(dest_admin.GetAccount(account = {'by':'name', 'value':dest_account}, attributes = {'applyCos':'1','attrs':','.join(zimbra_account_attributes)}).a)
 
-    modify_account = pysimplesoap.simplexml.SimpleXMLElement('<ModifyAccountRequest><id>{0}</id></ModifyAccountRequest>'.format(dest_attrs['zimbraId'][0]))
+    final_attrs = []
 
     for attr in source_attrs:
         if attr in zimbra_account_attributes:
@@ -860,28 +858,29 @@ def attributes(account):
             # blank due to access on source to be unset
             # Zimbra really responds by putting pd=1 in the <a> tag,
             # should probably switch to looking there...
+            if attr in bl_source_attrs:
+                print("\tWARNING: No access to attribute {0} (\"{1}\") on source account, ignoring...".format(attr, source_attrs[attr]))
+                continue
+            if attr in bl_dest_attrs:
+                print("\tWARNING: No access to attribute {0} (\"{1}\") on destination account, ignoring...".format(attr, source_attrs[attr]))
+                continue
             if source_attrs[attr][0] == '':
                 continue
             if attr not in dest_attrs:
                 print("\t{0}: {1} -> ''".format(attr, source_attrs[attr]))
                 for value in source_attrs[attr]:
-                    child = modify_account.add_child('a', value)
-                    child['n'] = attr
+                    final_attrs.append({'n':attr, 'value':value})
             elif attr not in dest_attrs or source_attrs[attr] != dest_attrs[attr]:
                 print("\t{0}: {1} -> {2}".format(attr, source_attrs[attr], dest_attrs[attr]))
                 for value in source_attrs[attr]:
-                    child = modify_account.add_child('a', value)
-                    child['n'] = attr
+                    final_attrs.append({'n':attr, 'value':value})
     
     # print modify_account.as_xml(pretty=True)
     if args.no_changes:
         print("NO CHANGES: Not modifying account...")
         return
     
-    # I don't think my lib has a good way to perform this at present
-    #dest_admin.ModifyAccount(modify_account)
-    # But doing it "manually" is just as good
-    dest_admin.do_req('ModifyAccountRequest', modify_account)
+    dest_admin.ModifyAccount(id = dest_attrs['zimbraId'][0], a = final_attrs)
 
 ### aliases
 def account_aliases(account):
@@ -1120,6 +1119,13 @@ def _get_dest_address(account):
         return "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
     else:
         return account
+
+def _get_blacklisted_attrs(attrs):
+    bl_attrs = []
+    for a in attrs:
+        if a['pd']:
+            bl_attrs.append(a['n'])
+    return bl_attrs
 
 def _get_admin_session(section):
     source_admin = zimbrasoap.admin(server  = config.get(section, 'admin_server'),
