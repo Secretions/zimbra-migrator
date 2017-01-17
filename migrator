@@ -673,6 +673,10 @@ def main(accounts):
         if args.imapsync:
             print("\tPerforming imapsync...")
             imapsync(account)
+        # contacts
+        if args.contacts:
+            print("Migrating contact data...")
+            contact_migrate(account)
         # calendar
         if args.calendar:
             print("Migrating calendar data...")
@@ -726,7 +730,7 @@ def imapsync(account):
     # go through every folder tag, we don't care the order/nesting
     for folder in response.folder:
         # External folder
-        if f in folder and re.search(folder['f'], 'y'):
+        if 'f' in folder and re.search(folder['f'], 'y'):
             continue
         if folder['absFolderPath'] is None:
             continue
@@ -779,6 +783,39 @@ def _gen_imapsync_command(account, folders):
     return cmd
 
 
+### Migrate contacts (wrapper for data_migrate)
+def contact_migrate(account):
+    print("Beginning Contact Migration, getting contact folder list...")
+    source_admin = _get_admin_session('Source')
+    source_mail = _get_mail_session(source_admin, account, 'Source')
+    response = source_mail.GetFolder(attributes = { 'visible':1, 'needGranteeName':'1' },
+                                     folder     = {'value':'blah'})
+    folders = []
+    # go through every folder tag, we don't care the order/nesting
+    for folder in response.folder:
+        # External folder
+        if 'f' in folder and re.search(folder['f'], 'y'):
+            continue
+        if folder['absFolderPath'] is None:
+            continue
+        if folder['view'] == 'contact':
+            folders.append({'path':folder['absFolderPath'], 'id':folder['id']})
+
+    dest_account = _get_dest_address(account)
+
+    # Get admin login from dest server, and do delegate auth
+    dest_admin = _get_admin_session('Dest')
+    dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
+
+    # Empty all contact folders on source before migration
+    # The "resolve" options the REST import API uses don't work for contacts for some reason
+    # Resulting in duplicates
+    if args.verbose: print("Emptying contact folders on destination: {0}".format(folders))
+    for folder in folders:
+        dest_mail.FolderAction(action = {'op':'empty', 'id':folder['id'], 'value':''})
+
+    data_migrate('contact', account)
+
 ### Generic data migrate (appointment, task, document)
 def data_migrate(data_type, account):
     source_admin = _get_admin_session('Source')
@@ -798,7 +835,7 @@ def data_migrate(data_type, account):
     dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
 
     print("Importing {3} data from temporary file {0}/{1}.{2}...".format(args.temp_dir, account, 'tgz', data_type))
-    rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken)])
+    rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace&types={4}".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken,data_type)])
     if rval != 0:
         print("Error backing up: {0}, aborting!".format(source_account))
         exit(1)
@@ -1215,7 +1252,7 @@ if __name__ == '__main__':
     parser.add_argument('--ssl_level', help='ssl/tls level (ssl3/tls1/tls1.1/tls1.2)')
     parser.add_argument('--temp_dir', help="Directory for temporary files (default is /tmp)", default='/tmp/')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
-    parser.add_argument('--contacts', action='store_true', help='Migrate contacts') # Try csv w/replace?
+    parser.add_argument('--contacts', action='store_true', help='Migrate contacts (DESTRUCTIVE, see readme)') # Try csv w/replace?
     parser.add_argument('--calendar', action='store_true', help='Migrate calendar data') # export/import
     parser.add_argument('--tasks', action='store_true', help='Migrate tasks') # export/import
     parser.add_argument('--briefcase', action='store_true', help='Migrate briefcase data') # export/import
