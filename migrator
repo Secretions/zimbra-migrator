@@ -2,7 +2,7 @@
 
 # to set ssl level
 import ssl
-
+from subprocess import call
 import re
 import ast
 import argparse
@@ -668,6 +668,18 @@ def main(accounts):
         if args.imapsync:
             print("\tPerforming imapsync...")
             imapsync(account)
+        # calendar
+        if args.calendar:
+            print("Migrating calendar data...")
+            data_migrate('appointment',account)
+        # tasks
+        if args.tasks:
+            print("Migrating tasks data...")
+            data_migrate('task',account)
+        # briefcase
+        if args.briefcase:
+            print("Migrating document data...")
+            data_migrate('document',account)
         # signatures
         if args.signatures:
             print("\tSyncing signatures...")
@@ -761,6 +773,32 @@ def _gen_imapsync_command(account, folders):
     cmd.append("2>&1")
     return cmd
 
+
+### Generic data migrate (appointment, task, document)
+def data_migrate(data_type, account):
+    source_admin = _get_admin_session('Source')
+    source_mail  = _get_mail_session(source_admin, account, 'Source')
+
+    url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1&types={4}".format(config.get('Source', 'zimbra_server'),account,'tgz',source_mail.authToken,data_type)
+    print("Exporting {3} data to temporary file {0}/{1}.{2}...".format(args.temp_dir, account, 'tgz', data_type))
+    rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.temp_dir, account, 'tgz')])
+    if rval != 0:
+        print("Error backing up: {0}, aborting!".format(source_account))
+        exit(1)
+
+    dest_account = _get_dest_address(account)
+
+    # Get admin login from dest server, and do delegate auth
+    dest_admin = _get_admin_session('Dest')
+    dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
+
+    print("Importing {3} data from temporary file {0}/{1}.{2}...".format(args.temp_dir, account, 'tgz', data_type))
+    rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken)])
+    if rval != 0:
+        print("Error backing up: {0}, aborting!".format(source_account))
+        exit(1)
+
+    print("Successfully migrated {0} data!".format(data_type))
 
 ### sigantures section
 def signatures(account):
@@ -1159,7 +1197,12 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
     parser.add_argument('-n', '--no_changes', action='store_true', help='No changes (dry run)')
     parser.add_argument('--ssl_level', help='ssl/tls level (ssl3/tls1/tls1.1/tls1.2)')
+    parser.add_argument('--temp_dir', help="Directory for temporary files (default is /tmp)", default='/tmp/')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
+    parser.add_argument('--contacts', action='store_true', help='Migrate contacts') # Try csv w/replace?
+    parser.add_argument('--calendar', action='store_true', help='Migrate calendar data') # export/import
+    parser.add_argument('--tasks', action='store_true', help='Migrate tasks') # export/import
+    parser.add_argument('--briefcase', action='store_true', help='Migrate briefcase data') # export/import
     parser.add_argument('--signatures', action='store_true', help='Signatures')
     parser.add_argument('--attrs', action='store_true', help='Account Attributes')
     parser.add_argument('--aliases', action='store_true', help='Aliases')
