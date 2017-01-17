@@ -660,6 +660,11 @@ zimbra_account_attributes = [ 'zimbraAccountStatus',
 ### left off: zimbraDebugInfo
 
 def main(accounts):
+    if args.get_all_accounts:
+        account_list = _get_all_accounts()
+        for account in account_list:
+            print(account)
+        exit(0)
     print("Migrating {0} accounts...".format(len(accounts)))
     for account in accounts:
         if re.match('^\s*#', account): continue
@@ -1189,13 +1194,24 @@ def _get_mail_session(admin, account, section):
         mail.set_ssl(ssl_level)
     return mail
 
+def _get_all_accounts():
+    source_admin = _get_admin_session('Source')
+    source_accounts = source_admin.GetAllAccounts(domain = {'by':'name', 'value':config.get('Source', 'domain')})
+    account_list = []
+    for account in source_accounts.GetAllAccountsResponse.children():
+        if account.get_name() == 'account':
+            account_list.append(account['name'])
+    return account_list
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Zimbra to Zimbra Migration Helper')
     parser.add_argument('-c', '--config', default='zmigrator.cfg', help='Config file (default: zmigrator.cfg)')
-    parser.add_argument('-l', '--list', default='list.txt', help='Account list')
+    parser.add_argument('-l', '--list', default='list.txt', help='Account list (defaults to this)')
+    parser.add_argument('-a', '--account', default=False, help="Account to work on, or enter 'all' to use all accounts as working set")
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode (SOAP Trace)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
     parser.add_argument('-n', '--no_changes', action='store_true', help='No changes (dry run)')
+    parser.add_argument('--get_all_accounts', action='store_true', help="Get full source account list (via SOAP, sketchy on large installs)")
     parser.add_argument('--ssl_level', help='ssl/tls level (ssl3/tls1/tls1.1/tls1.2)')
     parser.add_argument('--temp_dir', help="Directory for temporary files (default is /tmp)", default='/tmp/')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
@@ -1226,7 +1242,13 @@ if __name__ == '__main__':
     if not config.has_option('Dest', 'imapsync_opts'):
         config.set('Dest', 'imapsync_opts', '[]')
 
-    with open(args.list) as f:
-        accounts = f.read().splitlines()
+    if args.account:
+        if args.account == "all":
+            accounts = _get_all_accounts()
+        else:
+            accounts = [args.account]
+    else:
+        with open(args.list) as f:
+            accounts = f.read().splitlines()
 
     main(accounts)
