@@ -983,7 +983,15 @@ def account_aliases(account):
             if 'zimbraMailAlias' in dest_attrs and dest_alias in dest_attrs['zimbraMailAlias']:
                 if args.verbose: print("\tAlias {0} already on account!".format(dest_alias))
                 continue
-            dest_admin.AddAccountAlias(id = {'value':dest_attrs['zimbraId'][0]}, alias = {'value':dest_alias})
+            try:
+                dest_admin.AddAccountAlias(id = {'value':dest_attrs['zimbraId'][0]}, alias = {'value':dest_alias})
+            except pysimplesoap.client.SoapFault as e:
+                # If signature already exists, sweet!
+                if re.search('no such domain', str(e)):
+                    print("Can't add alias {0}, domain does not exist. Skipping...".format(dest_alias))
+                    continue
+                else:
+                    raise
 
 ### distribution list aliases
 def distlist_aliases():
@@ -1195,8 +1203,11 @@ def resources():
 def _get_dest_address(account):
     # Check if we're migrating to a different domain
     if config.has_option('Dest', 'domain'):
-        local_part = re.match('(.*)@.*', account)
-        return "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
+        local_part = re.match('(.*)@(.*)', account)
+        if local_part.group(2) == config.get('Source', 'domain'):
+            return "{0}@{1}".format(local_part.group(1), config.get('Dest', 'domain'))
+        else:
+            return account
     else:
         return account
 
@@ -1258,9 +1269,9 @@ if __name__ == '__main__':
     parser.add_argument('--briefcase', action='store_true', help='Migrate briefcase data') # export/import
     parser.add_argument('--signatures', action='store_true', help='Signatures')
     parser.add_argument('--attrs', action='store_true', help='Account Attributes')
-    parser.add_argument('--aliases', action='store_true', help='Aliases')
     parser.add_argument('--distlists', action='store_true', help='Distribution Lists')
     parser.add_argument('--resources', action='store_true', help='Calendar Resources')
+    parser.add_argument('--aliases', action='store_true', help='Aliases (should be the last thing)')
     parser.add_argument('--sharing', action='store_true', help='Sharing (should be the last thing)')
     args = parser.parse_args()
 
