@@ -19,7 +19,10 @@ It's currently very immature. It supports the following items, and they should b
 6. signatures
 7. account attributes
 8. distribution lists
-9. shares
+9. aliases
+10. shares
+
+This order is reflected in the --help output.
 
 IMPORTANT: Contact migration is implemented DESTRUCTIVELY. Contacts are currently migrated via the export/import REST API, and the "resolve" options that let you choose to skip or replace duplicates do not function for contacts. This results in duplicates. To avoid duplicates, this tool will empty the contact folders on the destination account. If the destination account is already in use, and new contacts were added, those new contacts WILL BE LOST. Ideally, this tool's contact support will be rewritten to use SOAP requests to handle contacts directly, but this is a lower priority at present.
 
@@ -36,11 +39,11 @@ An ideal full migration process would be:
    (or 'zmprov -l gaa -v domain.com | egrep "^# name |^userPassword"')
 5. Manually apply crypts (this will be rolled into the tool)
 6. Use migrator --imapsync --contacts --tasks --briefcase --calendar
-8. migrator --signatures
-9. migrator --shares
+8. migrator --signatures --attrs --distlists
+9. migrator --shares --aliases
 10. Move mx to new server
 11. Rerun migrator --imapsync --contacts --tasks --briefcase --calendar
-12. (optional) Rerun signatures and shares
+12. (optional) Rerun extra stuff if needed (attrs, etc.)
 13. Have a burger, you're done! That's what you do when you're done!
 
 ```
@@ -75,8 +78,9 @@ optional arguments:
   --briefcase           Migrate briefcase data
   --signatures          Signatures
   --attrs               Account Attributes
-  --aliases             Aliases
   --distlists           Distribution Lists
   --resources           Calendar Resources
+  --aliases             Aliases (should be the last thing)
   --sharing             Sharing (should be the last thing)
+
 ```
