@@ -1140,32 +1140,31 @@ def distlists():
         dest_attrs = dest_admin.ParseAttributes(dest_data.a)
 
         for dl in source_data.dl:
-            #print dest_data.as_xml(pretty=True)
-            modify_list = pysimplesoap.simplexml.SimpleXMLElement('<ModifyDistributionListRequest><id>{0}</id></ModifyDistributionListRequest>'.format(dest_data.dl['id']))
+            final_attrs = []
+
             for a in dl.a:
                 if a['pd']:
                     continue
                 elif a['n'] in distlist_attrs:
                     if a['n'] in dest_attrs and str(a) != dest_attrs[a['n']][0]:
                         print("\t{0}: {1} -> {2}".format(a['n'], a, dest_attrs[a['n']][0]))
-                        child = modify_list.add_child('a', a)
-                        child['n'] = a['n']
+                        final_attrs.append({'n':a['n'], 'value':a})
                 elif a['n'] in distlist_attr_bl:
                     continue
                 else:
                     print("Don't know what to do with {0}!".format(a['n']))
-            #print modify_list.as_xml(pretty=True)
+
             if args.no_changes:
                 print("NO CHANGES: Not modifying distribution list...")
             else:
-                dest_admin.do_req('ModifyDistributionListRequest', modify_list)
+                dest_admin.ModifyDistributionList(id = dest_data.dl['id'], a = final_attrs)
 
-            add_members =  pysimplesoap.simplexml.SimpleXMLElement('<AddDistributionListMemberRequest><id>{0}</id></AddDistributionListMemberRequest>'.format(dest_data.dl['id']))
+            members = []
             if 'dlm' in source_data.dl:
                 for member in source_data.dl.dlm:
                     if _member_not_in_list(dest_data, str(member)):
                         print("\tMember: {0}".format(member))
-                        add_members.add_child('dlm', str(member))
+                        members.append(str(member))
 
         try:
             print("Adding members...")
@@ -1173,9 +1172,9 @@ def distlists():
                 print("NO CHANGES: Not adding members...")
                 continue
             # no members to add
-            if 'dlm' not in add_members:
+            if len(members) <= 0:
                 continue
-            dest_admin.do_req('AddDistributionListMemberRequest', add_members)
+            dest_admin.AddDistributionListMember(id = dest_data.dl['id'], dlm = members)
         except  pysimplesoap.client.SoapFault as e:
             raise
 
