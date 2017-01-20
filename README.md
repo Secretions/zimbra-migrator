@@ -26,6 +26,8 @@ This order is reflected in the --help output.
 
 IMPORTANT: Contact migration is implemented DESTRUCTIVELY. Contacts are currently migrated via the export/import REST API, and the "resolve" options that let you choose to skip or replace duplicates do not function for contacts. This results in duplicates. To avoid duplicates, this tool will empty the contact folders on the destination account. If the destination account is already in use, and new contacts were added, those new contacts WILL BE LOST. Ideally, this tool's contact support will be rewritten to use SOAP requests to handle contacts directly, but this is a lower priority at present.
 
+NOTE: If you get your account list via --get_all_accounts, all global admins will be hidden from domain admins.
+
 If you run signatures prior to moving contact and briefcase data, you could potentially lose image links and contact attachments in your signatures.
 
 If you run shares before either imapsync/contact/calendar/briefcase data, folders that need sharing permissions may not exist yet on the destination server.
@@ -67,7 +69,8 @@ optional arguments:
   -v, --verbose         Verbose mode
   -n, --no_changes      No changes (dry run)
   --get_all_accounts    Get full source account list (via SOAP, sketchy on
-                        large installs)
+                        large installs, global admins are hidden from domain
+                        admins)
   --ssl_level SSL_LEVEL
                         ssl/tls level (ssl3/tls1/tls1.1/tls1.2)
   --temp_dir TEMP_DIR   Directory for temporary files (default is /tmp)

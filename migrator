@@ -823,7 +823,7 @@ def data_migrate(data_type, account):
 
     url = "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&meta=1&types={4}".format(config.get('Source', 'zimbra_server'),account,'tgz',source_mail.authToken,data_type)
     print("Exporting {3} data to temporary file {0}/{1}.{2}...".format(args.temp_dir, account, 'tgz', data_type))
-    rval = call(['curl', url, '-o', "{0}/{1}.{2}".format(args.temp_dir, account, 'tgz')])
+    rval = call(['curl', '-k', url, '-o', "{0}/{1}.{2}".format(args.temp_dir, account, 'tgz')])
     if rval != 0:
         print("Error backing up: {0}, aborting!".format(source_account))
         exit(1)
@@ -835,7 +835,7 @@ def data_migrate(data_type, account):
     dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
 
     print("Importing {3} data from temporary file {0}/{1}.{2}...".format(args.temp_dir, account, 'tgz', data_type))
-    rval = call(['curl', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace&types={4}".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken,data_type)])
+    rval = call(['curl', '-k', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace&types={4}".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken,data_type)])
     if rval != 0:
         print("Error backing up: {0}, aborting!".format(source_account))
         exit(1)
@@ -1258,7 +1258,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode (SOAP Trace)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
     parser.add_argument('-n', '--no_changes', action='store_true', help='No changes (dry run)')
-    parser.add_argument('--get_all_accounts', action='store_true', help="Get full source account list (via SOAP, sketchy on large installs)")
+    parser.add_argument('--get_all_accounts', action='store_true', help="Get full source account list (via SOAP, sketchy on large installs, global admins are hidden from domain admins)")
     parser.add_argument('--ssl_level', help='ssl/tls level (ssl3/tls1/tls1.1/tls1.2)')
     parser.add_argument('--temp_dir', help="Directory for temporary files (default is /tmp)", default='/tmp/')
     parser.add_argument('--imapsync', action='store_true', help='Perform imapsyncs')
