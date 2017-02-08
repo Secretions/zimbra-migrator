@@ -1148,7 +1148,7 @@ def distlists():
                 elif a['n'] in distlist_attrs:
                     if a['n'] in dest_attrs and str(a) != dest_attrs[a['n']][0]:
                         print("\t{0}: {1} -> {2}".format(a['n'], a, dest_attrs[a['n']][0]))
-                        final_attrs.append({'n':a['n'], 'value':a})
+                        final_attrs.append({'n':a['n'], 'value':str(a)})
                 elif a['n'] in distlist_attr_bl:
                     continue
                 else:
