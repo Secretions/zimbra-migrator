@@ -835,7 +835,8 @@ def data_migrate(data_type, account):
     dest_mail = _get_mail_session(dest_admin, dest_account, 'Dest')
 
     print("Importing {3} data from temporary file {0}/{1}.{2}...".format(args.temp_dir, account, 'tgz', data_type))
-    rval = call(['curl', '-k', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=replace&types={4}".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken,data_type)])
+    #### change to resolve=reset to exclude old contacts and recriete the contact list. 
+    rval = call(['curl', '-k', '-o', '/dev/null', '-F', 'file=@{0}/{1}.{2};filename={0}/{1}.{2}'.format(args.temp_dir,account,'tgz'), "https://{0}/home/{1}/?fmt={2}&auth=qp&zauthtoken={3}&callback=ZmImportExportController__callback__import1&charset=UTF-8&resolve=reset&types={4}".format(config.get('Dest', 'zimbra_server'),dest_account,'tgz',dest_mail.authToken,data_type)])
     if rval != 0:
         print("Error backing up: {0}, aborting!".format(source_account))
         exit(1)
